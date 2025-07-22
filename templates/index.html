@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Haber Skor Tahmini</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f4f7fa; }
+        .navbar {
+            background: #27ae60;
+            color: #fff;
+            padding: 18px 0 12px 0;
+            text-align: center;
+            box-shadow: 0 2px 8px #ccc;
+        }
+        .navbar h1 { margin: 0; font-size: 2.2em; letter-spacing: 1px; }
+        .menu {
+            margin-top: 8px;
+        }
+        .menu a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 18px;
+            font-size: 1.1em;
+            opacity: 0.85;
+            transition: opacity 0.2s;
+        }
+        .menu a:hover { opacity: 1; text-decoration: underline; }
+        .container {
+            background: #fff;
+            padding: 32px 24px 24px 24px;
+            border-radius: 10px;
+            max-width: 650px;
+            margin: 40px auto 30px auto;
+            box-shadow: 0 4px 24px #b0b8c1;
+        }
+        h2 { color: #2c3e50; margin-top: 0; }
+        textarea {
+            width: 100%;
+            height: 120px;
+            font-size: 1.1em;
+            border-radius: 6px;
+            border: 1px solid #b0b8c1;
+            padding: 10px;
+            margin-bottom: 18px;
+            resize: vertical;
+        }
+        .btn {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+            display: block;
+            margin: 0;
+        }
+        .btn:hover { background: #b93222; }
+        .form-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            margin-top: 16px;
+        }
+        select {
+            padding: 10px 18px;
+            border-radius: 5px;
+            border: 1px solid #b0b8c1;
+            font-size: 1.05em;
+            background: #f7f7f7;
+            color: #2c3e50;
+        }
+        .skorlar {
+            margin-top: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            justify-content: center;
+            align-items: stretch;
+        }
+        .skor-kutu {
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #d0d8e0;
+            padding: 26px 36px 20px 36px;
+            min-width: 130px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .skor-kutu span {
+            display: flex;
+            align-items: center;
+            font-size: 1.18em;
+            margin-bottom: 8px;
+            color: #2980b9;
+            font-weight: 600;
+            gap: 7px;
+        }
+        .aciklama {
+            margin-top: 36px;
+            background: #f0f4f8;
+            border-left: 5px solid #2980b9;
+            padding: 18px 22px;
+            border-radius: 7px;
+            color: #2c3e50;
+        }
+        .ornekler {
+            margin-top: 18px;
+            background: #f9fafb;
+            border: 1px dashed #b0b8c1;
+            border-radius: 7px;
+            padding: 14px 18px;
+            color: #444;
+            font-size: 1em;
+        }
+        /* .header-ikon {
+            font-size: 1.5em;
+            margin: 0 10px;
+            vertical-align: middle;
+        } */
+        @media (max-width: 700px) {
+            .container { padding: 16px 4vw; }
+            .skorlar { flex-direction: column; align-items: center; gap: 18px; }
+            .skor-kutu { min-width: 90px; padding: 18px 10vw 14px 10vw; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Haber Skor Tahmini</h1>
+        <div class="menu">
+            <a href="/">Ana Sayfa</a>
+            <a href="#aciklama">Açıklama</a>
+            <a href="#ornekler">Örnek Haberler</a>
+            <a href="/ekle">Eğitim Setine Haber Ekle</a>
+        </div>
+    </div>
+    <div class="container">
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+            <h2 style="margin:0;">Haberinizi Girin</h2>
+            <span class="header-ikon">🔍</span>
+        </div>
+        
+        <form method="post" class="mt-4">
+            <label for="haber"><b>Haber metni:</b></label><br>
+            <textarea name="haber" id="haber" rows="4" cols="60" class="form-control mb-3" style="max-width:600px;">{{ haber }}</textarea>
+            <div class="form-row mb-3" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <label for="yontem" style="margin-right: 4px;">Yöntem:</label>
+                    <select name="yontem" id="yontem" class="form-select" style="min-width: 120px; display: inline-block;" onchange="updateModelOptions()">
+                        <option value="tfidf" {% if secili_yontem == 'tfidf' %}selected{% endif %}>TF-IDF</option>
+                        <option value="w2v" {% if secili_yontem == 'w2v' %}selected{% endif %}>Word2Vec</option>
+                        <option value="glove" {% if secili_yontem == 'glove' %}selected{% endif %}>GloVe</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="model" style="margin-right: 4px;">Model:</label>
+                    <select name="model" id="model" class="form-select" style="min-width: 140px; display: inline-block;">
+                        <!-- Seçili yönteme göre doldurulacak -->
+                    </select>
+                </div>
+                <button class="btn btn-success" type="submit" style="min-width: 120px;">Tahmin Et</button>
+            </div>
+            <script>
+            function updateModelOptions() {
+                var yontem = document.getElementById('yontem').value;
+                var modelSelect = document.getElementById('model');
+                modelSelect.innerHTML = '';
+                var tfidfModels = [
+                    {val: 'rf', text: 'Random Forest'},
+                    {val: 'ann', text: 'ANN'},
+                    {val: 'svm', text: 'SVM'},
+                    {val: 'ada', text: 'AdaBoost'},
+                    {val: 'nb', text: 'Naive Bayes'}
+                ];
+                var w2vModels = [
+                    {val: 'rf', text: 'Random Forest'},
+                    {val: 'ann', text: 'ANN'},
+                    {val: 'svm', text: 'SVM'},
+                    {val: 'ada', text: 'AdaBoost'}
+                ];
+                var models = (yontem === 'tfidf') ? tfidfModels : w2vModels;
+                for (var i = 0; i < models.length; i++) {
+                    var opt = document.createElement('option');
+                    opt.value = models[i].val;
+                    opt.text = models[i].text;
+                    modelSelect.appendChild(opt);
+                }
+            }
+            // Sayfa yüklenince doğru model seçeneklerini göster
+            window.onload = updateModelOptions;
+            </script>
+        </form>
+        {% if skorlar %}
+        <div class="skorlar">
+            <div class="skor-kutu"><span>💵 Dolar</span> {{ skorlar['Dolar'] }}</div>
+            <div class="skor-kutu"><span>🪙 Altın</span> {{ skorlar['Altın'] }}</div>
+            <div class="skor-kutu"><span>📈 Borsa</span> {{ skorlar['Borsa'] }}</div>
+            <div class="skor-kutu"><span>₿ Bitcoin</span> {{ skorlar['Bitcoin'] }}</div>
+        </div>
+        {% endif %}
+        <div class="aciklama" id="aciklama">
+            <b>Nasıl çalışır?</b><br>
+            Bu arayüz, girdiğiniz haber metninin finansal varlıklar (Dolar, Altın, Borsa, Bitcoin) üzerindeki etkisini 0-5 arası bir skorla tahmin eder.<br>
+            <ul>
+                <li>0: Güçlü düşüş etkisi</li>
+                <li>1: Düşüş etkisi</li>
+                <li>2: Hafif Düşüş etkisi</li>
+                <li>3: Nötr/etkisiz</li>
+                <li>4: Yükseliş etkisi</li>
+                <li>5: Güçlü yükseliş etkisi</li>
+            </ul>
+            <b>Not:</b> Kısa veya anlamsız metinlerde skorlar otomatik olarak nötr (3) olarak atanır.
+        </div>
+        <div class="ornekler" id="ornekler">
+            <b>Örnek haberler:</b><br>
+            <ul>
+                <li>"Dolar/TL tarihi rekorunu kırdı, piyasada hareketlilik arttı."</li>
+                <li>"Borsa İstanbul günü sert düşüşle kapattı."</li>
+                <li>"Gram altın yatırımcısına kazandırmaya devam ediyor."</li>
+                <li>"Bitcoin fiyatı son 24 saatte %10 değer kaybetti."</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

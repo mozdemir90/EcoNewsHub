@@ -1,0 +1,16 @@
+flowchart TD
+    A["Haber Toplama & Temizleme"] --> B["Haber Analizi & Skorlama"]
+    B --> C1["TF-IDF Vektörizasyonu"]
+    B --> C2["Word2Vec Vektörizasyonu"]
+    B --> C3["GloVe Vektörizasyonu"]
+    C1 --> D1["Model Eğitimi (RF, SVM, Ada, ANN, NB)"]
+    C2 --> D2["Model Eğitimi (RF, SVM, Ada, ANN)"]
+    C3 --> D3["Model Eğitimi (RF, SVM, Ada, ANN)"]
+    D1 --> E1["Tahmin & Sonuç Kaydı"]
+    D2 --> E2["Tahmin & Sonuç Kaydı"]
+    D3 --> E3["Tahmin & Sonuç Kaydı"]
+    E1 & E2 & E3 --> F["Web Arayüzü (Flask)"]
+    F --> G["Haber Girişi & Model Seçimi"]
+    G --> H["Tahmin Sonucu Gösterimi"]
+    G --> I["Eğitim Setine Ekleme (Duplicate Kontrolü)"]
+    I --> B 

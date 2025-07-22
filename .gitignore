@@ -1,0 +1,10 @@
+logs/
+output/
+models/
+data/*.xlsx
+data/*.csv
+data/glove.6B.100d.txt
+.DS_Store
+*.pyc
+__pycache__/
+.env

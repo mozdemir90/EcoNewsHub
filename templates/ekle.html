@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Haber Ekle - Eğitim Seti</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f4f7fa; }
+        .navbar {
+            background: #27ae60;
+            color: #fff;
+            padding: 18px 0 12px 0;
+            text-align: center;
+            box-shadow: 0 2px 8px #ccc;
+        }
+        .navbar h1 { margin: 0; font-size: 2.2em; letter-spacing: 1px; }
+        .menu {
+            margin-top: 8px;
+        }
+        .menu a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 18px;
+            font-size: 1.1em;
+            opacity: 0.85;
+            transition: opacity 0.2s;
+        }
+        .menu a:hover { opacity: 1; text-decoration: underline; }
+        .container {
+            background: #fff;
+            padding: 32px 24px 24px 24px;
+            border-radius: 10px;
+            max-width: 650px;
+            margin: 40px auto 30px auto;
+            box-shadow: 0 4px 24px #b0b8c1;
+        }
+        h2 { color: #2c3e50; margin-top: 0; }
+        textarea {
+            width: 100%;
+            height: 120px;
+            font-size: 1.1em;
+            border-radius: 6px;
+            border: 1px solid #b0b8c1;
+            padding: 10px;
+            margin-bottom: 18px;
+            resize: vertical;
+        }
+        .btn {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin: 0;
+        }
+        .btn:hover { background: #b93222; }
+        .form-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            margin-top: 16px;
+        }
+        select {
+            padding: 10px 18px;
+            border-radius: 5px;
+            border: 1px solid #b0b8c1;
+            font-size: 1.05em;
+            background: #f7f7f7;
+            color: #2c3e50;
+        }
+        .skorlar {
+            margin-top: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            justify-content: center;
+            align-items: stretch;
+        }
+        .skor-kutu {
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #d0d8e0;
+            padding: 26px 36px 20px 36px;
+            min-width: 130px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .skor-kutu span {
+            display: flex;
+            align-items: center;
+            font-size: 1.18em;
+            margin-bottom: 8px;
+            color: #2980b9;
+            font-weight: 600;
+            gap: 7px;
+        }
+        .skor-input {
+            width: 50px;
+            text-align: center;
+            font-size: 1.1em;
+            border-radius: 5px;
+            border: 1px solid #b0b8c1;
+            margin-top: 4px;
+        }
+        .mesaj { color: green; font-weight: bold; margin-top: 18px; }
+        @media (max-width: 700px) {
+            .container { padding: 16px 4vw; }
+            .skorlar { flex-direction: column; align-items: center; gap: 18px; }
+            .skor-kutu { min-width: 90px; padding: 18px 10vw 14px 10vw; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Haber Skor Tahmini</h1>
+        <div class="menu">
+            <a href="/">Ana Sayfa</a>
+            <a href="/ekle">Eğitim Setine Ekle</a>
+        </div>
+    </div>
+    <div class="container">
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+            <span class="header-ikon">📰</span>
+            <h2 style="margin:0;">Eğitim Setine Haber Ekle</h2>
+            <span class="header-ikon">🔍</span>
+        </div>
+        <form method="post">
+            <label for="haber">Haber metni:</label><br>
+            <textarea name="haber" id="haber" required placeholder="Buraya haber metnini yazın...">{{ haber }}</textarea>
+            <div class="form-row">
+                <select name="model">
+                    <option value="rf" {% if secili_model == 'rf' %}selected{% endif %}>Random Forest</option>
+                    <option value="ann" {% if secili_model == 'ann' %}selected{% endif %}>Yapay Sinir Ağı (ANN)</option>
+                    <option value="svm" {% if secili_model == 'svm' %}selected{% endif %}>SVM</option>
+                    <option value="nb" {% if secili_model == 'nb' %}selected{% endif %}>Naive Bayes</option>
+                    <option value="ada" {% if secili_model == 'ada' %}selected{% endif %}>AdaBoost</option>
+                </select>
+                <button class="btn" type="submit" name="tahmin">Tahmin Et</button>
+                <button class="btn" type="submit" name="submit">Eğitim Setine Ekle</button>
+            </div>
+            {% if skorlar %}
+            <div class="skorlar">
+                <div class="skor-kutu">
+                    <span>💵 Dolar</span>
+                    <input class="skor-input" type="number" name="skor_dolar" min="0" max="5" value="{{ skorlar['Dolar'] }}">
+                </div>
+                <div class="skor-kutu">
+                    <span>🪙 Altın</span>
+                    <input class="skor-input" type="number" name="skor_altin" min="0" max="5" value="{{ skorlar['Altın'] }}">
+                </div>
+                <div class="skor-kutu">
+                    <span>📈 Borsa</span>
+                    <input class="skor-input" type="number" name="skor_borsa" min="0" max="5" value="{{ skorlar['Borsa'] }}">
+                </div>
+                <div class="skor-kutu">
+                    <span>₿ Bitcoin</span>
+                    <input class="skor-input" type="number" name="skor_bitcoin" min="0" max="5" value="{{ skorlar['Bitcoin'] }}">
+                </div>
+            </div>
+            {% endif %}
+        </form>
+        {% if mesaj %}
+        <div class="mesaj">{{ mesaj }}</div>
+        {% endif %}
+    </div>
+</body>
+</html> 
