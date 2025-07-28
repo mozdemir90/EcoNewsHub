@@ -256,7 +256,7 @@ class VarlikBazliHaberAnalizi:
             })
         return pd.DataFrame(data)
 
-    def kaydet(self, cikti_dosya='analiz_sonuclari2.xlsx'):
+    def kaydet(self, cikti_dosya='data/analiz_sonuclari2.xlsx'):
         if self.df is None:
             raise ValueError("Veri yüklenmeden kaydedilemez. Önce veri_yukle() çağrılmalı.")
         with pd.ExcelWriter(cikti_dosya, engine='openpyxl') as writer:
@@ -267,7 +267,7 @@ class VarlikBazliHaberAnalizi:
             ozet_df.to_excel(writer, sheet_name='Ozet_Istatistikler', index=False)
         print(f"Sonuçlar '{cikti_dosya}' dosyasına kaydedildi.")
 
-    def calistir(self, cikti_dosya='analiz_sonuclari2.xlsx'):
+    def calistir(self, cikti_dosya='data/analiz_sonuclari2.xlsx'):
         self.veri_yukle()
         self.veri_temizle()
         self.dil_tespiti_uygula()
@@ -294,8 +294,8 @@ def varlik_cumle_skoru(metin, varlik_kelimeleri, artis_kelimeleri, azalis_kelime
 
 if __name__ == "__main__":
     analiz = VarlikBazliHaberAnalizi(
-        excel_dosya_yolu='haberler_detayli_lang_tarih1.xlsx',
+        excel_dosya_yolu='data/haberler_detayli_lang_tarih1.xlsx',
         haber_sutun='content',
         dil_sutun='language'
     )
-    analiz.calistir('analiz_sonuclari2.xlsx')
+    analiz.calistir('data/analiz_sonuclari2.xlsx')

@@ -112,7 +112,21 @@
             border: 1px solid #b0b8c1;
             margin-top: 4px;
         }
-        .mesaj { color: green; font-weight: bold; margin-top: 18px; }
+        .mesaj { 
+            color: green; 
+            font-weight: bold; 
+            margin-top: 18px; 
+            text-align: center;
+        }
+        .mesaj.uyari { 
+            color: #e74c3c; 
+            background: #fdf2f2;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 18px;
+            text-align: center;
+        }
         @media (max-width: 700px) {
             .container { padding: 16px 4vw; }
             .skorlar { flex-direction: column; align-items: center; gap: 18px; }
@@ -170,8 +184,8 @@
             {% endif %}
         </form>
         {% if mesaj %}
-        <div class="mesaj">{{ mesaj }}</div>
+        <div class="mesaj{% if 'zaten eğitim setinde mevcut' in mesaj %} uyari{% endif %}">{{ mesaj }}</div>
         {% endif %}
     </div>
 </body>
-</html> 
+</html>

@@ -112,41 +112,6 @@ if hasattr(w2v_model, 'save'):
     w2v_model.save("models/word2vec_model.model")
 print("Word2Vec ve (varsa) GloVe ile tahminler kaydedildi.")
 
-# --- Duplicate kontrolü ve eğitim seti güncelleme ---
-def normalize_text(text):
-    import unicodedata, re
-    text = str(text)
-    text = unicodedata.normalize('NFKC', text)
-    text = text.lower()
-    text = re.sub(r'[\s\n\r]+', ' ', text)
-    text = re.sub(r'[^\w\s]', '', text)
-    return text.strip()
-
-# Testten gelen tahminleri yeni eğitim verisi olarak hazırla
-new_rows = []
-for i, row in df_test.iterrows():
-    new_rows.append({
-        "content": "",  # test setinde content boş olabilir
-        "ozet": row["ozet"],
-        "language": "tr" if any(c in row["ozet"] for c in "çğıöşüÇĞIÖŞÜ") else "en",
-        "dolar_skor": row["dolar_skor_rf_w2v"] if "dolar_skor_rf_w2v" in row else row.get("dolar_skor", 3),
-        "altin_skor": row["altin_skor_rf_w2v"] if "altin_skor_rf_w2v" in row else row.get("altin_skor", 3),
-        "borsa_skor": row["borsa_skor_rf_w2v"] if "borsa_skor_rf_w2v" in row else row.get("borsa_skor", 3),
-        "bitcoin_skor": row["bitcoin_skor_rf_w2v"] if "bitcoin_skor_rf_w2v" in row else row.get("bitcoin_skor", 3),
-    })
-
-# Eğitim setini oku ve normalize edilmiş özet setini oluştur
-train_path = "data/training_data.xlsx"
-df_train = pd.read_excel(train_path)
-train_ozet_norm = set(df_train["ozet"].astype(str).apply(normalize_text))
-
-# Duplicate olmayan yeni satırları ekle
-for row in new_rows:
-    if normalize_text(row["ozet"]) not in train_ozet_norm:
-        df_train = pd.concat([df_train, pd.DataFrame([row])], ignore_index=True)
-        train_ozet_norm.add(normalize_text(row["ozet"]))
-
-# Sütun sırası: content, ozet, language, skorlar
-df_train = df_train[["content", "ozet", "language"] + varliklar]
-df_train.to_excel(train_path, index=False) 
+# --- Eğitim seti güncelleme işlemi overfitting nedeniyle durduruldu ---
+print("Not: Test verilerinin eğitim setine eklenmesi overfitting nedeniyle durduruldu.") 
     

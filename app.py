@@ -8,6 +8,7 @@ import unicodedata
 import re
 import numpy as np
 from gensim.models import Word2Vec, KeyedVectors
+from functools import lru_cache
 
 # Model dosya yolları
 GLOVE_PATH = "data/glove.6B.100d.txt"
@@ -173,6 +174,10 @@ def get_sentence_vector_glove(tokens, glove):
     else:
         return np.zeros(glove.vector_size)
 
+@lru_cache(maxsize=1)
+def get_vectorizer_tfidf():
+    return joblib.load("models/tfidf_vectorizer.pkl")
+
 app = Flask(__name__)
 
 @app.route("/", methods=["GET", "POST"])
@@ -200,8 +205,11 @@ def index():
                 else:
                     skorlar = {"Dolar": "GloVe yok", "Altın": "GloVe yok", "Borsa": "GloVe yok", "Bitcoin": "GloVe yok"}
                     return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem)
+            if secili_yontem == "tfidf" and secili_model == "nb":
+                X_input = X.toarray()
+            else:
+                X_input = X
             modeller = model_files[secili_yontem][secili_model]
-            X_input = X
             skorlar = {
                 "Dolar": min(5, max(0, round(modeller["Dolar"].predict(X_input)[0]))),
                 "Altın": min(5, max(0, round(modeller["Altın"].predict(X_input)[0]))),
@@ -257,6 +265,7 @@ def ekle():
             if len(haber.split()) < 4:
                 skorlar = {"Dolar": 3, "Altın": 3, "Borsa": 3, "Bitcoin": 3}
             else:
+                vectorizer_tfidf = get_vectorizer_tfidf()
                 X = vectorizer_tfidf.transform([haber]) # tfidf kullanılıyor
                 modeller = model_files["tfidf"][secili_model]
                 if secili_model == "nb":

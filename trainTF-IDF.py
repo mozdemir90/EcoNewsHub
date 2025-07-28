@@ -59,19 +59,19 @@ for varlik in varliklar:
     nb_models[varlik] = model_nb
     joblib.dump(model_nb, f"models/{varlik}_nb_model.pkl")
 
-    # AdaBoost
+    # AdaBoost (dense array gerekir)
     model_ada = AdaBoostRegressor(n_estimators=100, random_state=42)
-    model_ada.fit(X_train, y)
-    tahmin_ada = model_ada.predict(X_test)
+    model_ada.fit(X_train.toarray(), y)
+    tahmin_ada = model_ada.predict(X_test.toarray())
     tahmin_ada = [min(5, max(0, round(t))) for t in tahmin_ada]
     tahminler_ada[varlik + "_ada"] = tahmin_ada
     ada_models[varlik] = model_ada
     joblib.dump(model_ada, f"models/{varlik}_ada_model.pkl")
 
-    # ANN (MLPRegressor)
+    # ANN (MLPRegressor, dense array gerekir)
     model_ann = MLPRegressor(hidden_layer_sizes=(100,), max_iter=300, random_state=42)
-    model_ann.fit(X_train, y)
-    tahmin_ann = model_ann.predict(X_test)
+    model_ann.fit(X_train.toarray(), y)
+    tahmin_ann = model_ann.predict(X_test.toarray())
     tahmin_ann = [min(5, max(0, round(t))) for t in tahmin_ann]
     tahminler_ann[varlik + "_ann"] = tahmin_ann
     ann_models[varlik] = model_ann
@@ -85,53 +85,13 @@ for varlik in varliklar:
     df_test[varlik + "_ada"] = tahminler_ada[varlik + "_ada"]
     df_test[varlik + "_ann"] = tahminler_ann[varlik + "_ann"]
 
-# 4. Random Forest tahminlerini etiketli veri olarak eğitim setine ekle (duplicate kontrolü ile)
-def detect_language(text):
-    turkce_karakterler = set('çğıöşüÇĞIÖŞÜ')
-    if any(char in turkce_karakterler for char in str(text)):
-        return 'tr'
-    return 'en'
-
-def normalize_text(text):
-    import unicodedata, re
-    text = str(text)
-    text = unicodedata.normalize('NFKC', text)
-    text = text.lower()
-    text = re.sub(r'[\s\n\r]+', ' ', text)
-    text = re.sub(r'[^\w\s]', '', text)
-    return text.strip()
-
-# Testten gelen tahminleri yeni eğitim verisi olarak hazırla
-new_rows = []
-for i, row in df_test.iterrows():
-    new_rows.append({
-        "content": "",  # test setinde content boş olabilir
-        "ozet": row["ozet"],
-        "language": detect_language(row["ozet"]),
-        "dolar_skor": row["dolar_skor_rf"] if "dolar_skor_rf" in row else row.get("dolar_skor", 3),
-        "altin_skor": row["altin_skor_rf"] if "altin_skor_rf" in row else row.get("altin_skor", 3),
-        "borsa_skor": row["borsa_skor_rf"] if "borsa_skor_rf" in row else row.get("borsa_skor", 3),
-        "bitcoin_skor": row["bitcoin_skor_rf"] if "bitcoin_skor_rf" in row else row.get("bitcoin_skor", 3),
-    })
-
-# Eğitim setini oku ve normalize edilmiş özet setini oluştur
-train_path = "data/training_data.xlsx"
-df_train = pd.read_excel(train_path)
-train_ozet_norm = set(df_train["ozet"].astype(str).apply(normalize_text))
-
-# Duplicate olmayan yeni satırları ekle
-for row in new_rows:
-    if normalize_text(row["ozet"]) not in train_ozet_norm:
-        df_train = pd.concat([df_train, pd.DataFrame([row])], ignore_index=True)
-        train_ozet_norm.add(normalize_text(row["ozet"]))
-
-# Sütun sırası: content, ozet, language, skorlar
-df_train = df_train[["content", "ozet", "language"] + varliklar]
-df_train.to_excel(train_path, index=False)
+# 4. Eğitim seti güncelleme işlemi overfitting nedeniyle durduruldu
+# Test verilerinin eğitim setine eklenmesi overfittinge sebep oluyor
+print("Not: Test verilerinin eğitim setine eklenmesi overfitting nedeniyle durduruldu.")
 
 # 5. Tahminli sonuçları kaydet
 df_test.to_excel("data/analiz_sonuclari2_tahminli_TF-IDF.xlsx", index=False)
-print("Tahminler analiz_sonuclari2_tahminli.xlsx ve güncellenmiş eğitim seti data/training_data.xlsx dosyasına kaydedildi.")
+print("Tahminler data/analiz_sonuclari2_tahminli_TF-IDF.xlsx dosyasına kaydedildi.")
 
 # TF-IDF vectorizer'ı da kaydet
 joblib.dump(vectorizer, "models/tfidf_vectorizer.pkl")

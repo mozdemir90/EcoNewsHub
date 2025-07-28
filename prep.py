@@ -18,7 +18,7 @@ except nltk.downloader.DownloadError:
     nltk.download('stopwords')
 
 # Klasörler ve dosya adları
-INPUT_FILE = "haberler_detayli_lang_tarih1.xlsx"
+INPUT_FILE = "data/haberler_detayli_lang_tarih1.xlsx"
 OUTPUT_FILE = "output/haberler_temizlenmis.xlsx"
 
 stopwords_tr = set(stopwords.words("turkish"))

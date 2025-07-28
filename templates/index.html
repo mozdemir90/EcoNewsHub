@@ -166,7 +166,11 @@
                 <div>
                     <label for="model" style="margin-right: 4px;">Model:</label>
                     <select name="model" id="model" class="form-select" style="min-width: 140px; display: inline-block;">
-                        <!-- Seçili yönteme göre doldurulacak -->
+                        <option value="rf" {% if secili_model == 'rf' %}selected{% endif %}>Random Forest</option>
+                        <option value="ann" {% if secili_model == 'ann' %}selected{% endif %}>ANN</option>
+                        <option value="svm" {% if secili_model == 'svm' %}selected{% endif %}>SVM</option>
+                        <option value="ada" {% if secili_model == 'ada' %}selected{% endif %}>AdaBoost</option>
+                        <option value="nb" {% if secili_model == 'nb' %}selected{% endif %}>Naive Bayes</option>
                     </select>
                 </div>
                 <button class="btn btn-success" type="submit" style="min-width: 120px;">Tahmin Et</button>
@@ -189,15 +193,26 @@
                     {val: 'svm', text: 'SVM'},
                     {val: 'ada', text: 'AdaBoost'}
                 ];
-                var models = (yontem === 'tfidf') ? tfidfModels : w2vModels;
+                var gloveModels = [
+                    {val: 'rf', text: 'Random Forest'},
+                    {val: 'ann', text: 'ANN'},
+                    {val: 'svm', text: 'SVM'},
+                    {val: 'ada', text: 'AdaBoost'}
+                ];
+                var models = (yontem === 'tfidf') ? tfidfModels : (yontem === 'w2v' ? w2vModels : gloveModels);
+
+                // Backend'den secili_model'i alın
+                var seciliModel = "{{ secili_model }}";
                 for (var i = 0; i < models.length; i++) {
                     var opt = document.createElement('option');
                     opt.value = models[i].val;
                     opt.text = models[i].text;
+                    if (models[i].val === seciliModel) {
+                        opt.selected = true;
+                    }
                     modelSelect.appendChild(opt);
                 }
             }
-            // Sayfa yüklenince doğru model seçeneklerini göster
             window.onload = updateModelOptions;
             </script>
         </form>
