@@ -161,9 +161,10 @@
                         <option value="tfidf" {% if secili_yontem == 'tfidf' %}selected{% endif %}>TF-IDF</option>
                         <option value="w2v" {% if secili_yontem == 'w2v' %}selected{% endif %}>Word2Vec</option>
                         <option value="glove" {% if secili_yontem == 'glove' %}selected{% endif %}>GloVe</option>
+                        <option value="deep_learning" {% if secili_yontem == 'deep_learning' %}selected{% endif %}>Deep Learning</option>
                     </select>
                 </div>
-                <div>
+                <div id="supervised_model_div">
                     <label for="model" style="margin-right: 4px;">Model:</label>
                     <select name="model" id="model" class="form-select" style="min-width: 140px; display: inline-block;">
                         <option value="rf" {% if secili_model == 'rf' %}selected{% endif %}>Random Forest</option>
@@ -173,10 +174,38 @@
                         <option value="nb" {% if secili_model == 'nb' %}selected{% endif %}>Naive Bayes</option>
                     </select>
                 </div>
+                <div id="dl_model_div" style="display: none;">
+                    <label for="dl_model" style="margin-right: 4px;">DL Model:</label>
+                    <select name="dl_model" id="dl_model" class="form-select" style="min-width: 140px; display: inline-block;">
+                        <option value="cnn" {% if secili_dl_model == 'cnn' %}selected{% endif %}>1D CNN</option>
+                        <option value="lstm" {% if secili_dl_model == 'lstm' %}selected{% endif %}>LSTM</option>
+                        <option value="cnn_lstm" {% if secili_dl_model == 'cnn_lstm' %}selected{% endif %}>CNN+LSTM</option>
+                    </select>
+                </div>
                 <button class="btn btn-success" type="submit" style="min-width: 120px;">Tahmin Et</button>
             </div>
             <script>
             function updateModelOptions() {
+                const yontem = document.getElementById('yontem').value;
+                const supervisedDiv = document.getElementById('supervised_model_div');
+                const dlDiv = document.getElementById('dl_model_div');
+                
+                if (yontem === 'deep_learning') {
+                    supervisedDiv.style.display = 'none';
+                    dlDiv.style.display = 'block';
+                } else {
+                    supervisedDiv.style.display = 'block';
+                    dlDiv.style.display = 'none';
+                }
+            }
+            
+            // Sayfa yüklendiğinde çalıştır
+            document.addEventListener('DOMContentLoaded', function() {
+                updateModelOptions();
+            });
+            
+            // Eski fonksiyon - supervised learning için
+            function updateSupervisedModels() {
                 var yontem = document.getElementById('yontem').value;
                 var modelSelect = document.getElementById('model');
                 modelSelect.innerHTML = '';

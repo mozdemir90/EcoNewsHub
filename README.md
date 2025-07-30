@@ -1,56 +1,132 @@
-# Ekonomik Haber Analiz ve Tahmin Sistemi
+# Haber Skor Tahmini Projesi
 
-Bu proje, haberlerin finansal varlıklar (Dolar, Altın, Borsa, Bitcoin) üzerindeki etkisini otomatik olarak analiz eden, skorlayan ve makine öğrenmesiyle tahmin eden bir sistemdir. Hem anahtar kelime tabanlı hem de makine öğrenmesi tabanlı (TF-IDF, Word2Vec, GloVe) modellemeler içerir. Web arayüzü ile kullanıcılar haber girişi yapabilir, model ve yöntem seçip tahmin alabilir, yeni haberleri eğitim setine ekleyebilir.
+Bu proje, haber metinlerinin finansal varlıklar (Dolar, Altın, Borsa, Bitcoin) üzerindeki etkisini tahmin eden bir makine öğrenmesi sistemidir.
 
-## Genel Akış
-- **Haber Toplama & Temizleme:** Farklı kaynaklardan haberler toplanır, temizlenir ve özetlenir.
-- **Haber Analizi & Skorlama:** Varlık bazlı anahtar kelime ve cümle analizi ile skorlar atanır.
-- **Vektörizasyon:** TF-IDF, Word2Vec veya GloVe ile metinler vektörleştirilir.
-- **Model Eğitimi:** Her yöntem için farklı regresyon modelleri (Random Forest, SVM, AdaBoost, ANN, Naive Bayes) eğitilir.
-- **Tahmin & Sonuç:** Test seti için tahminler yapılır, sonuçlar kaydedilir.
-- **Web Arayüzü:** Kullanıcılar haber girip model/yöntem seçerek tahmin alabilir, yeni haberleri eğitim setine ekleyebilir.
+## 🚀 Özellikler
 
-Daha detaylı akış için: [PROJECT_FLOW.md](PROJECT_FLOW.md)
+### Supervised Learning Modelleri
+- **TF-IDF + Regresyon Modelleri**
+  - Random Forest
+  - Support Vector Machine (SVM)
+  - Artificial Neural Network (ANN)
+  - AdaBoost
+  - Naive Bayes
 
-## Temel Dosyalar
-- `app.py` : Flask tabanlı web arayüzü, model yükleme ve tahmin.
-- `trainTF-IDF.py` : TF-IDF tabanlı model eğitimi ve tahmin.
-- `trainWord2Vec_GloVe.py` : Word2Vec ve GloVe tabanlı model eğitimi ve tahmin.
-- `labelNews.py` : Anahtar kelime ve cümle bazlı varlık skorlama, özetleme, veri temizliği.
-- `sentiment2LAbel.py` : Alternatif/ayrıntılı duygu ve varlık analizi.
-- `prep.py` : Ham haber verisi temizleme, stopword çıkarma, etiketleme.
-- `news_fetcher.py` : Farklı kaynaklardan haber çekme (scraper).
-- `requirements.txt` : Gerekli Python paketleri.
+- **Word2Vec + Regresyon Modelleri**
+  - Random Forest
+  - SVM
+  - ANN
+  - AdaBoost
 
-## Kurulum
-1. Gerekli paketleri yükleyin:
-   ```bash
-   pip install -r requirements.txt
-   pip install gensim langdetect flask joblib
-   ```
-2. (GloVe için) `data/glove.6B.100d.txt` dosyasını indirip ilgili klasöre koyun.
+- **GloVe + Regresyon Modelleri**
+  - Random Forest
+  - SVM
+  - ANN
+  - AdaBoost
 
-## Kullanım
-- **Model Eğitimi:**
-  - TF-IDF: `python trainTF-IDF.py`
-  - Word2Vec/GloVe: `python trainWord2Vec_GloVe.py`
-- **Web Arayüzü:**
-  ```bash
-  python app.py
-  # Tarayıcıda: http://localhost:5050
-  ```
-- **Haber Temizleme/Özetleme:**
-  - `python labelNews.py` veya `python prep.py`
+### Deep Learning Modelleri
+- **1D CNN** - Convolutional Neural Network
+- **LSTM** - Long Short-Term Memory
+- **CNN + LSTM** - Hibrit model
 
-## Notlar
-- Eğitim seti: `data/training_data.xlsx` (duplicate özetler otomatik engellenir)
-- Test seti: `data/analiz_sonuclari2.xlsx`
-- Sonuçlar: `data/analiz_sonuclari2_tahminli_TF-IDF.xlsx`, `data/analiz_sonuclari2_tahminli_w2v.xlsx`, `data/analiz_sonuclari2_tahminli_glove.xlsx`
-- Modeller: `models/` klasöründe saklanır.
-- Loglar: `logs/` klasöründe tutulur (isteğe bağlı, Github'a atılmaz).
+## 📁 Proje Yapısı
 
-## Gereksiz Dosyalar (Github'a eklenmemeli)
-- `logs/`, `output/`, `models/`, `data/*.xlsx`, `data/*.csv`, `.DS_Store`
+```
+newsFetch/
+├── app.py                          # Flask web uygulaması
+├── trainTF-IDF.py                  # TF-IDF modelleri eğitimi
+├── trainWord2Vec_GloVe.py          # Word2Vec/GloVe modelleri eğitimi
+├── trainDeepLearning.py            # Deep Learning modelleri eğitimi
+├── compare_models.py               # Model karşılaştırma scripti
+├── labelNews.py                    # Haber etiketleme ve skorlama
+├── news_fetcher.py                 # Haber çekme scripti
+├── prep.py                         # Veri ön işleme
+├── requirements.txt                # Gerekli kütüphaneler
+├── data/                          # Veri dosyaları
+│   ├── training_data.xlsx         # Eğitim verisi
+│   ├── analiz_sonuclari2.xlsx    # Test verisi
+│   └── ...
+├── models/                        # Eğitilmiş modeller
+│   ├── supervised/                # Supervised learning modelleri
+│   └── deep_learning/            # Deep learning modelleri
+└── templates/                     # Web arayüzü
+    ├── index.html
+    └── ekle.html
+```
 
-## Lisans
-MIT 
+## 🛠️ Kurulum
+
+1. **Gerekli kütüphaneleri yükleyin:**
+```bash
+pip install -r requirements.txt
+```
+
+2. **Veri hazırlığı:**
+```bash
+python labelNews.py
+python trainTF-IDF.py
+python trainWord2Vec_GloVe.py
+python trainDeepLearning.py
+```
+
+3. **Web uygulamasını başlatın:**
+```bash
+python app.py
+```
+
+## 📊 Model Karşılaştırması
+
+Tüm modelleri karşılaştırmak için:
+```bash
+python compare_models.py
+```
+
+Bu script şunları oluşturur:
+- `data/model_comparison.xlsx` - Karşılaştırma tablosu
+- `data/model_comparison_heatmap.png` - Performans heatmap'i
+- `data/r2_comparison.png` - R² skorları grafiği
+- `data/model_comparison_report.md` - Detaylı rapor
+
+## 🌐 Web Arayüzü
+
+- **Ana Sayfa:** Haber tahmini yapma
+- **Eğitim Setine Ekle:** Yeni haber ve skor ekleme
+- **Model Seçenekleri:**
+  - TF-IDF, Word2Vec, GloVe (Supervised Learning)
+  - Deep Learning (CNN, LSTM, CNN+LSTM)
+
+## 📈 Performans Metrikleri
+
+- **MSE** (Mean Squared Error)
+- **MAE** (Mean Absolute Error)
+- **R²** (R-squared)
+- **RMSE** (Root Mean Squared Error)
+
+## 🔧 Kullanım
+
+1. Web arayüzünde haber metnini girin
+2. Yöntem seçin (TF-IDF, Word2Vec, GloVe, Deep Learning)
+3. Model seçin
+4. "Tahmin Et" butonuna tıklayın
+5. Sonuçları görüntüleyin
+
+## 📝 Skor Sistemi
+
+- **0:** Güçlü düşüş etkisi
+- **1:** Düşüş etkisi
+- **2:** Hafif düşüş etkisi
+- **3:** Nötr/etkisiz
+- **4:** Yükseliş etkisi
+- **5:** Güçlü yükseliş etkisi
+
+## 🤝 Katkıda Bulunma
+
+1. Fork yapın
+2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
+3. Commit yapın (`git commit -m 'Add some AmazingFeature'`)
+4. Push yapın (`git push origin feature/AmazingFeature`)
+5. Pull Request oluşturun
+
+## 📄 Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır. 

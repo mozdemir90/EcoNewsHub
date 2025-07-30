@@ -10,6 +10,18 @@ lxml>=4.9.0
 # Data manipulation and analysis
 pandas>=1.5.0
 numpy>=1.21.0
+scikit-learn
+flask
+openpyxl
+textblob
+langdetect
+nltk
+gensim
+joblib
+matplotlib
+seaborn
+tensorflow
+keras
 
 # Excel export functionality
 openpyxl>=3.0.10

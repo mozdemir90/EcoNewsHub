@@ -9,9 +9,62 @@ import re
 import numpy as np
 from gensim.models import Word2Vec, KeyedVectors
 from functools import lru_cache
+import nltk
+from nltk.tokenize import sent_tokenize
+
+# NLTK verilerini indir (eğer yoksa)
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
 
 # Model dosya yolları
 GLOVE_PATH = "data/glove.6B.100d.txt"
+
+# Deep Learning modelleri
+DL_MODELS = {}
+DL_TOKENIZER = None
+
+# Deep Learning modellerini yükle (varsa)
+try:
+    import tensorflow as tf
+    from tensorflow.keras.models import load_model
+    from tensorflow.keras.preprocessing.sequence import pad_sequences
+    
+    # Tokenizer yükle
+    if os.path.exists("models/deep_learning/tokenizer.pkl"):
+        DL_TOKENIZER = joblib.load("models/deep_learning/tokenizer.pkl")
+        print("✅ Deep Learning tokenizer yüklendi")
+    
+    # Modelleri yükle
+    dl_model_files = {
+        'cnn': 'models/deep_learning/cnn_model.h5',
+        'lstm': 'models/deep_learning/lstm_model.h5',
+        'cnn_lstm': 'models/deep_learning/cnn_lstm_model.h5'
+    }
+    
+    for model_name, model_path in dl_model_files.items():
+        if os.path.exists(model_path):
+            try:
+                DL_MODELS[model_name] = load_model(model_path, compile=False)
+                print(f"✅ {model_name} modeli yüklendi")
+            except Exception as e:
+                print(f"❌ {model_name} modeli yüklenemedi: {e}")
+                # Model yüklenemezse, alternatif olarak best model'i dene
+                best_model_path = model_path.replace('_model.h5', '_best.h5')
+                if os.path.exists(best_model_path):
+                    try:
+                        DL_MODELS[model_name] = load_model(best_model_path, compile=False)
+                        print(f"✅ {model_name} best modeli yüklendi")
+                    except Exception as e2:
+                        print(f"❌ {model_name} best modeli de yüklenemedi: {e2}")
+    
+    print(f"Deep Learning modelleri: {list(DL_MODELS.keys())}")
+    
+except ImportError:
+    print("⚠️ TensorFlow bulunamadı, Deep Learning modelleri kullanılamayacak")
+except Exception as e:
+    print(f"⚠️ Deep Learning modelleri yüklenemedi: {e}")
 glove_vectors = None
 if os.path.exists(GLOVE_PATH):
     glove_vectors = KeyedVectors.load_word2vec_format(GLOVE_PATH, binary=False, no_header=True)
@@ -174,6 +227,67 @@ def get_sentence_vector_glove(tokens, glove):
     else:
         return np.zeros(glove.vector_size)
 
+def predict_deep_learning(text, model_name):
+    """Deep Learning modeli ile tahmin yap"""
+    if model_name not in DL_MODELS or DL_TOKENIZER is None:
+        print(f"Model kontrolü: {model_name} in DL_MODELS: {model_name in DL_MODELS}")
+        print(f"Tokenizer kontrolü: DL_TOKENIZER is None: {DL_TOKENIZER is None}")
+        return None
+    
+    try:
+        # Metni tokenize et
+        sequences = DL_TOKENIZER.texts_to_sequences([text])
+        padded = pad_sequences(sequences, maxlen=200, padding='post', truncating='post')
+        
+        # Tahmin yap
+        predictions = DL_MODELS[model_name].predict(padded, verbose=0)
+        
+        # 0-5 aralığına sınırla
+        predictions = np.clip(predictions[0], 0, 5)
+        
+        return {
+            "Dolar": round(predictions[0]),
+            "Altın": round(predictions[1]),
+            "Borsa": round(predictions[2]),
+            "Bitcoin": round(predictions[3])
+        }
+    except Exception as e:
+        print(f"Deep Learning tahmin hatası: {e}")
+        return None
+
+def haber_temizle(metin):
+    """Haber metnini temizler - gereksiz boşlukları ve satırları kaldırır"""
+    if not isinstance(metin, str):
+        return str(metin)
+    
+    # Çoklu boşlukları tek boşluğa çevir
+    metin = re.sub(r'\s+', ' ', metin)
+    # Başındaki ve sonundaki boşlukları kaldır
+    metin = metin.strip()
+    # Çoklu satır sonlarını tek satır sonuna çevir
+    metin = re.sub(r'\n\s*\n', '\n', metin)
+    # Satır başındaki ve sonundaki boşlukları kaldır
+    metin = re.sub(r'\n\s+', '\n', metin)
+    metin = re.sub(r'\s+\n', '\n', metin)
+    
+    return metin
+
+def haber_ozetle(metin, dil='tr', max_cumle=2):
+    """Haber metninden özet çıkarır"""
+    try:
+        if not isinstance(metin, str) or len(metin) < 40:
+            return metin
+        cumleler = sent_tokenize(metin)
+        if len(cumleler) <= max_cumle:
+            return metin
+        # Basit extractive: en uzun cümleleri seç
+        secili = sorted(cumleler, key=lambda x: len(x), reverse=True)[:max_cumle]
+        # Orijinal sıraya göre sırala
+        secili = sorted(secili, key=lambda x: cumleler.index(x))
+        return ' '.join(secili)
+    except Exception:
+        return metin[:200] + '...'
+
 @lru_cache(maxsize=1)
 def get_vectorizer_tfidf():
     return joblib.load("models/tfidf_vectorizer.pkl")
@@ -186,10 +300,12 @@ def index():
     haber = ""
     secili_model = "rf"
     secili_yontem = "tfidf"
+    secili_dl_model = "cnn"  # Varsayılan değer
     if request.method == "POST":
         haber = request.form["haber"]
         secili_yontem = request.form.get("yontem", "tfidf")
         secili_model = request.form.get("model", "rf")
+        secili_dl_model = request.form.get("dl_model", "cnn")
         if len(haber.split()) < 4:
             skorlar = {"Dolar": 3, "Altın": 3, "Borsa": 3, "Bitcoin": 3}
         else:
@@ -204,7 +320,17 @@ def index():
                     X = np.array([get_sentence_vector_glove(tokens, glove_vectors)])
                 else:
                     skorlar = {"Dolar": "GloVe yok", "Altın": "GloVe yok", "Borsa": "GloVe yok", "Bitcoin": "GloVe yok"}
-                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem)
+                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+            elif secili_yontem == "deep_learning":
+                # Deep Learning tahmini
+                dl_result = predict_deep_learning(haber, secili_dl_model)
+                if dl_result is not None:
+                    skorlar = dl_result
+                else:
+                    skorlar = {"Dolar": "DL Model Yok", "Altın": "DL Model Yok", "Borsa": "DL Model Yok", "Bitcoin": "DL Model Yok"}
+                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                log_user_action(request.remote_addr, f"tahmin_{secili_yontem}_{secili_dl_model}", haber, skorlar, secili_model)
+                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
             if secili_yontem == "tfidf" and secili_model == "nb":
                 X_input = X.toarray()
             else:
@@ -217,13 +343,14 @@ def index():
                 "Bitcoin": min(5, max(0, round(modeller["Bitcoin"].predict(X_input)[0]))),
             }
         log_user_action(request.remote_addr, f"tahmin_{secili_yontem}", haber, skorlar, secili_model)
-    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem)
+    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
 
 @app.route("/ekle", methods=["GET", "POST"])
 def ekle():
     skorlar = None
     haber = ""
     secili_model = "rf"
+    secili_dl_model = "cnn"  # Varsayılan değer
     mesaj = ""
     kullanici_skor = {}
     if request.method == "POST":
@@ -231,8 +358,13 @@ def ekle():
         secili_model = request.form.get("model", "rf")
         # Eğer kullanıcı skorları submit ettiyse onları al
         if "submit" in request.form:
-            for varlik in ["Dolar", "Altın", "Borsa", "Bitcoin"]:
-                kullanici_skor[varlik] = int(request.form.get(f"skor_{varlik.lower()}", 3))
+            # Form field isimlerini düzelt (Türkçe karakter sorunu)
+            kullanici_skor = {
+                "Dolar": int(request.form.get("skor_dolar", 3)),
+                "Altın": int(request.form.get("skor_altin", 3)),  # HTML'de skor_altin
+                "Borsa": int(request.form.get("skor_borsa", 3)),
+                "Bitcoin": int(request.form.get("skor_bitcoin", 3))
+            }
             haber_norm = normalize_text(haber)
             if os.path.exists(DATA_PATH):
                 df = pd.read_excel(DATA_PATH)
@@ -240,12 +372,17 @@ def ekle():
                 if haber_norm in existing_norms:
                     mesaj = "Bu haber zaten eğitim setinde mevcut!"
                     skorlar = kullanici_skor
-                    return render_template("ekle.html", skorlar=skorlar, haber=haber, secili_model=secili_model, mesaj=mesaj)
+                    return render_template("ekle.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
+            # Haber metnini temizle
+            haber_temizlenmis = haber_temizle(haber)
+            # Haber özetini çıkar
+            haber_ozeti = haber_ozetle(haber_temizlenmis, detect_language(haber_temizlenmis))
+            
             new_row = {
-                "content": haber.strip(),
-                "ozet": haber.strip(),
+                "content": haber_temizlenmis,
+                "ozet": haber_ozeti,
                 "content_norm": haber_norm,
-                "language": detect_language(haber),
+                "language": detect_language(haber_temizlenmis),
                 "dolar_skor": kullanici_skor["Dolar"],
                 "altin_skor": kullanici_skor["Altın"],
                 "borsa_skor": kullanici_skor["Borsa"],
@@ -280,7 +417,7 @@ def ekle():
                 }
             # Log tahmin işlemi (ekle sayfasında)
             log_user_action(request.remote_addr, "tahmin_ekle", haber, skorlar, secili_model)
-    return render_template("ekle.html", skorlar=skorlar, haber=haber, secili_model=secili_model, mesaj=mesaj)
+    return render_template("ekle.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)

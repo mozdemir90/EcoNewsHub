@@ -118,6 +118,15 @@
             margin-top: 18px; 
             text-align: center;
         }
+        .mesaj.basari { 
+            color: #27ae60; 
+            background: #f0f9f0;
+            border: 1px solid #a8e6cf;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 18px;
+            text-align: center;
+        }
         .mesaj.uyari { 
             color: #e74c3c; 
             background: #fdf2f2;
@@ -184,7 +193,7 @@
             {% endif %}
         </form>
         {% if mesaj %}
-        <div class="mesaj{% if 'zaten eğitim setinde mevcut' in mesaj %} uyari{% endif %}">{{ mesaj }}</div>
+        <div class="mesaj{% if 'zaten eğitim setinde mevcut' in mesaj %} uyari{% elif 'başarıyla eğitim setine eklendi' in mesaj %} basari{% endif %}">{{ mesaj }}</div>
         {% endif %}
     </div>
 </body>
