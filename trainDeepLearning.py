@@ -87,6 +87,7 @@ class DeepLearningTrainer:
             Dropout(0.5),
             Dense(64, activation='relu'),
             Dropout(0.3),
+            Dense(32, activation='relu'),
             Dense(4, activation='linear')  # 4 varlık için
         ])
         
@@ -191,7 +192,7 @@ class DeepLearningTrainer:
         print(f"📊 {model_name} değerlendiriliyor...")
         
         # Tahminler
-        y_pred = model.predict(self.X_test)
+        y_pred = model.predict(self.X_test, verbose=0)
         
         # Metrikler
         mse = mean_squared_error(self.y_test, y_pred)
@@ -203,10 +204,14 @@ class DeepLearningTrainer:
         print(f"MAE: {mae:.4f}")
         print(f"R²: {r2:.4f}")
         
-        # Test setine tahminleri ekle
+        # Test setine tahminleri ekle - daha iyi yuvarlama
         varliklar = ['dolar_skor', 'altin_skor', 'borsa_skor', 'bitcoin_skor']
         for i, varlik in enumerate(varliklar):
-            self.df_test[f'{varlik}_{model_name}'] = np.clip(y_pred[:, i], 0, 5).round()
+            # Daha iyi yuvarlama: 0.5'ten büyükse yukarı, küçükse aşağı
+            rounded_preds = np.where(y_pred[:, i] >= 0.5, 
+                                   np.ceil(y_pred[:, i]), 
+                                   np.floor(y_pred[:, i]))
+            self.df_test[f'{varlik}_{model_name}'] = np.clip(rounded_preds, 0, 5)
         
         return mse, mae, r2
     

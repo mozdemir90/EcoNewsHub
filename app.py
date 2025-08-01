@@ -242,14 +242,19 @@ def predict_deep_learning(text, model_name):
         # Tahmin yap
         predictions = DL_MODELS[model_name].predict(padded, verbose=0)
         
-        # 0-5 aralığına sınırla
-        predictions = np.clip(predictions[0], 0, 5)
+        # Daha iyi yuvarlama: 0.5'ten büyükse yukarı, küçükse aşağı
+        rounded_preds = []
+        for pred in predictions[0]:
+            if pred >= 0.5:
+                rounded_preds.append(min(5, int(np.ceil(pred))))
+            else:
+                rounded_preds.append(max(0, int(np.floor(pred))))
         
         return {
-            "Dolar": round(predictions[0]),
-            "Altın": round(predictions[1]),
-            "Borsa": round(predictions[2]),
-            "Bitcoin": round(predictions[3])
+            "Dolar": rounded_preds[0],
+            "Altın": rounded_preds[1],
+            "Borsa": rounded_preds[2],
+            "Bitcoin": rounded_preds[3]
         }
     except Exception as e:
         print(f"Deep Learning tahmin hatası: {e}")
