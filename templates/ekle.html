@@ -175,19 +175,19 @@
             <div class="skorlar">
                 <div class="skor-kutu">
                     <span>💵 Dolar</span>
-                    <input class="skor-input" type="number" name="skor_dolar" min="0" max="5" value="{{ skorlar['Dolar'] }}">
+                    <input class="skor-input" type="number" name="skor_dolar" min="1" max="5" value="{{ skorlar['Dolar'] if skorlar['Dolar'] > 0 else 1 }}">
                 </div>
                 <div class="skor-kutu">
                     <span>🪙 Altın</span>
-                    <input class="skor-input" type="number" name="skor_altin" min="0" max="5" value="{{ skorlar['Altın'] }}">
+                    <input class="skor-input" type="number" name="skor_altin" min="1" max="5" value="{{ skorlar['Altın'] if skorlar['Altın'] > 0 else 1 }}">
                 </div>
                 <div class="skor-kutu">
                     <span>📈 Borsa</span>
-                    <input class="skor-input" type="number" name="skor_borsa" min="0" max="5" value="{{ skorlar['Borsa'] }}">
+                    <input class="skor-input" type="number" name="skor_borsa" min="1" max="5" value="{{ skorlar['Borsa'] if skorlar['Borsa'] > 0 else 1 }}">
                 </div>
                 <div class="skor-kutu">
                     <span>₿ Bitcoin</span>
-                    <input class="skor-input" type="number" name="skor_bitcoin" min="0" max="5" value="{{ skorlar['Bitcoin'] }}">
+                    <input class="skor-input" type="number" name="skor_bitcoin" min="1" max="5" value="{{ skorlar['Bitcoin'] if skorlar['Bitcoin'] > 0 else 1 }}">
                 </div>
             </div>
             {% endif %}

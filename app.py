@@ -360,10 +360,10 @@ def ekle():
         if "submit" in request.form:
             # Form field isimlerini düzelt (Türkçe karakter sorunu)
             kullanici_skor = {
-                "Dolar": int(request.form.get("skor_dolar", 3)),
-                "Altın": int(request.form.get("skor_altin", 3)),  # HTML'de skor_altin
-                "Borsa": int(request.form.get("skor_borsa", 3)),
-                "Bitcoin": int(request.form.get("skor_bitcoin", 3))
+                "Dolar": max(1, int(request.form.get("skor_dolar", 3))),  # Minimum 1
+                "Altın": max(1, int(request.form.get("skor_altin", 3))),  # HTML'de skor_altin
+                "Borsa": max(1, int(request.form.get("skor_borsa", 3))),  # Minimum 1
+                "Bitcoin": max(1, int(request.form.get("skor_bitcoin", 3)))  # Minimum 1
             }
             haber_norm = normalize_text(haber)
             if os.path.exists(DATA_PATH):
