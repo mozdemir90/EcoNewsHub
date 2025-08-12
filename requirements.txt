@@ -23,6 +23,7 @@ seaborn
 tensorflow
 keras
 
+
 # Excel export functionality
 openpyxl>=3.0.10
 xlsxwriter>=3.0.3

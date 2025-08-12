@@ -21,7 +21,8 @@ class ModelComparator:
         files = {
             'TF-IDF': 'data/analiz_sonuclari2_tahminli_TF-IDF.xlsx',
             'Word2Vec': 'data/analiz_sonuclari2_tahminli_w2v.xlsx',
-            'Deep Learning': 'data/analiz_sonuclari2_tahminli_DL.xlsx'
+            'Deep Learning': 'data/analiz_sonuclari2_tahminli_DL.xlsx',
+
         }
         
         self.test_data = {}

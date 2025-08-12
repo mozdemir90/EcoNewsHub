@@ -21,7 +21,7 @@ else:
     print("CPU kullanılıyor")
 
 class DeepLearningTrainer:
-    def __init__(self, max_words=10000, max_len=200):
+    def __init__(self, max_words=20000, max_len=256):
         self.max_words = max_words
         self.max_len = max_len
         self.tokenizer = None
@@ -45,16 +45,24 @@ class DeepLearningTrainer:
         """Metin verilerini hazırla"""
         print("🔤 Metin verileri hazırlanıyor...")
         
+        # Birleşik metin: content + ozet
+        train_text = (
+            self.df_train.get('content', '').astype(str).fillna('') + ' ' + self.df_train.get('ozet', '').astype(str).fillna('')
+        ).str.strip()
+        test_text = (
+            self.df_test.get('content', '').astype(str).fillna('') + ' ' + self.df_test.get('ozet', '').astype(str).fillna('')
+        ).str.strip()
+
         # Tokenizer oluştur ve eğit
         self.tokenizer = Tokenizer(num_words=self.max_words, oov_token='<OOV>')
-        self.tokenizer.fit_on_texts(self.df_train['ozet'].astype(str))
+        self.tokenizer.fit_on_texts(train_text)
         
         # Eğitim verisi
-        X_train = self.tokenizer.texts_to_sequences(self.df_train['ozet'].astype(str))
+        X_train = self.tokenizer.texts_to_sequences(train_text)
         X_train = pad_sequences(X_train, maxlen=self.max_len, padding='post', truncating='post')
         
         # Test verisi
-        X_test = self.tokenizer.texts_to_sequences(self.df_test['ozet'].astype(str))
+        X_test = self.tokenizer.texts_to_sequences(test_text)
         X_test = pad_sequences(X_test, maxlen=self.max_len, padding='post', truncating='post')
         
         # Hedef değişkenler
@@ -76,17 +84,27 @@ class DeepLearningTrainer:
         print("🏗️ 1D CNN modeli oluşturuluyor...")
         
         model = Sequential([
-            Embedding(self.max_words, 128, input_length=self.max_len),
-            Conv1D(128, 5, activation='relu'),
-            MaxPooling1D(5),
-            Conv1D(128, 5, activation='relu'),
-            MaxPooling1D(5),
-            Conv1D(128, 5, activation='relu'),
-            GlobalMaxPooling1D(),
-            Dense(128, activation='relu'),
-            Dropout(0.5),
-            Dense(64, activation='relu'),
+            Embedding(self.max_words, 256, input_length=self.max_len),
+            Conv1D(256, 7, activation='relu', padding='same'),
+            Conv1D(256, 7, activation='relu', padding='same'),
+            MaxPooling1D(3),
             Dropout(0.3),
+            
+            Conv1D(128, 5, activation='relu', padding='same'),
+            Conv1D(128, 5, activation='relu', padding='same'),
+            MaxPooling1D(3),
+            Dropout(0.3),
+            
+            Conv1D(64, 3, activation='relu', padding='same'),
+            Conv1D(64, 3, activation='relu', padding='same'),
+            GlobalMaxPooling1D(),
+            
+            Dense(256, activation='relu'),
+            Dropout(0.5),
+            Dense(128, activation='relu'),
+            Dropout(0.3),
+            Dense(64, activation='relu'),
+            Dropout(0.2),
             Dense(32, activation='relu'),
             Dense(4, activation='linear')  # 4 varlık için
         ])
@@ -153,19 +171,28 @@ class DeepLearningTrainer:
         
         return model
     
-    def train_model(self, model, model_name, epochs=50, batch_size=32):
+    def train_model(self, model, model_name, epochs=100, batch_size=16):
         """Modeli eğit"""
         print(f"🎯 {model_name} eğitiliyor...")
         
-        # Early stopping
+        # Veri dengesizliği için class weights hesapla
+        class_weights = self.calculate_class_weights()
+        
+        # Model derle - Custom loss function ile
+        model.compile(
+            optimizer='adam',
+            loss=self.custom_loss_function,
+            metrics=['mae']
+        )
+        
+        # Early stopping ve model checkpoint
         early_stopping = tf.keras.callbacks.EarlyStopping(
             monitor='val_loss',
             patience=10,
             restore_best_weights=True
         )
         
-        # Model checkpoint
-        checkpoint = tf.keras.callbacks.ModelCheckpoint(
+        model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
             f"models/deep_learning/{model_name}_best.h5",
             monitor='val_loss',
             save_best_only=True,
@@ -175,10 +202,10 @@ class DeepLearningTrainer:
         # Eğitim
         history = model.fit(
             self.X_train, self.y_train,
-            validation_split=0.2,
             epochs=epochs,
             batch_size=batch_size,
-            callbacks=[early_stopping, checkpoint],
+            validation_split=0.2,
+            callbacks=[early_stopping, model_checkpoint],
             verbose=1
         )
         
@@ -186,6 +213,43 @@ class DeepLearningTrainer:
         self.histories[model_name] = history
         
         return model, history
+    
+    def calculate_class_weights(self):
+        """Veri dengesizliği için class weights hesapla"""
+        print("⚖️ Class weights hesaplanıyor...")
+        
+        # Her varlık için skor dağılımını analiz et
+        varliklar = ['dolar_skor', 'altin_skor', 'borsa_skor', 'bitcoin_skor']
+        total_samples = len(self.y_train)
+        
+        class_weights = {}
+        for i, varlik in enumerate(varliklar):
+            skorlar = self.y_train[:, i]
+            unique, counts = np.unique(skorlar, return_counts=True)
+            
+            # Her skor için weight hesapla (az olan skorlara daha yüksek weight)
+            weights = {}
+            for skor, count in zip(unique, counts):
+                weight = total_samples / (len(unique) * count)
+                weights[int(skor)] = weight
+            
+            class_weights[i] = weights
+            print(f"{varlik}: {weights}")
+        
+        return class_weights
+    
+    def custom_loss_function(self, y_true, y_pred):
+        """Veri dengesizliği için custom loss function"""
+        # MSE loss
+        mse_loss = tf.keras.backend.mean(tf.keras.backend.square(y_true - y_pred))
+        
+        # Skor aralığına göre penalty (0 ve 5 skorlarına daha fazla önem ver)
+        score_penalty = tf.keras.backend.mean(
+            tf.keras.backend.square(y_true - y_pred) * 
+            tf.keras.backend.square(y_true - 2.5)  # 2.5'ten uzak olan skorlara daha fazla penalty
+        )
+        
+        return mse_loss + 0.1 * score_penalty
     
     def evaluate_model(self, model, model_name):
         """Model performansını değerlendir"""
@@ -204,14 +268,18 @@ class DeepLearningTrainer:
         print(f"MAE: {mae:.4f}")
         print(f"R²: {r2:.4f}")
         
-        # Test setine tahminleri ekle - daha iyi yuvarlama
+        # Test setine tahminleri ekle - daha agresif yuvarlama
         varliklar = ['dolar_skor', 'altin_skor', 'borsa_skor', 'bitcoin_skor']
         for i, varlik in enumerate(varliklar):
-            # Daha iyi yuvarlama: 0.5'ten büyükse yukarı, küçükse aşağı
-            rounded_preds = np.where(y_pred[:, i] >= 0.5, 
-                                   np.ceil(y_pred[:, i]), 
-                                   np.floor(y_pred[:, i]))
-            self.df_test[f'{varlik}_{model_name}'] = np.clip(rounded_preds, 0, 5)
+            # Daha agresif yuvarlama - 5 skorunu da dahil et
+            pred = np.clip(y_pred[:, i], 0, 5) # Clip first
+            rounded_preds = np.zeros_like(pred)
+            rounded_preds[pred < 1.5] = 0
+            rounded_preds[(pred >= 1.5) & (pred < 2.5)] = 1
+            rounded_preds[(pred >= 2.5) & (pred < 3.5)] = 2
+            rounded_preds[(pred >= 3.5) & (pred < 4.5)] = 3
+            rounded_preds[pred >= 4.5] = 5  # 4.5+ değerler 5'e yuvarlanmalı
+            self.df_test[f'{varlik}_{model_name}'] = rounded_preds
         
         return mse, mae, r2
     

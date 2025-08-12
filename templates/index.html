@@ -162,17 +162,12 @@
                         <option value="w2v" {% if secili_yontem == 'w2v' %}selected{% endif %}>Word2Vec</option>
                         <option value="glove" {% if secili_yontem == 'glove' %}selected{% endif %}>GloVe</option>
                         <option value="deep_learning" {% if secili_yontem == 'deep_learning' %}selected{% endif %}>Deep Learning</option>
+
                     </select>
                 </div>
                 <div id="supervised_model_div">
                     <label for="model" style="margin-right: 4px;">Model:</label>
-                    <select name="model" id="model" class="form-select" style="min-width: 140px; display: inline-block;">
-                        <option value="rf" {% if secili_model == 'rf' %}selected{% endif %}>Random Forest</option>
-                        <option value="ann" {% if secili_model == 'ann' %}selected{% endif %}>ANN</option>
-                        <option value="svm" {% if secili_model == 'svm' %}selected{% endif %}>SVM</option>
-                        <option value="ada" {% if secili_model == 'ada' %}selected{% endif %}>AdaBoost</option>
-                        <option value="nb" {% if secili_model == 'nb' %}selected{% endif %}>Naive Bayes</option>
-                    </select>
+                    <select name="model" id="model" class="form-select" style="min-width: 140px; display: inline-block;"></select>
                 </div>
                 <div id="dl_model_div" style="display: none;">
                     <label for="dl_model" style="margin-right: 4px;">DL Model:</label>
@@ -189,60 +184,54 @@
                 const yontem = document.getElementById('yontem').value;
                 const supervisedDiv = document.getElementById('supervised_model_div');
                 const dlDiv = document.getElementById('dl_model_div');
-                
+                const modelSelect = document.getElementById('model');
+
                 if (yontem === 'deep_learning') {
                     supervisedDiv.style.display = 'none';
                     dlDiv.style.display = 'block';
+                    return;
                 } else {
                     supervisedDiv.style.display = 'block';
                     dlDiv.style.display = 'none';
                 }
-            }
-            
-            // Sayfa yüklendiğinde çalıştır
-            document.addEventListener('DOMContentLoaded', function() {
-                updateModelOptions();
-            });
-            
-            // Eski fonksiyon - supervised learning için
-            function updateSupervisedModels() {
-                var yontem = document.getElementById('yontem').value;
-                var modelSelect = document.getElementById('model');
-                modelSelect.innerHTML = '';
-                var tfidfModels = [
-                    {val: 'rf', text: 'Random Forest'},
-                    {val: 'ann', text: 'ANN'},
-                    {val: 'svm', text: 'SVM'},
-                    {val: 'ada', text: 'AdaBoost'},
-                    {val: 'nb', text: 'Naive Bayes'}
-                ];
-                var w2vModels = [
-                    {val: 'rf', text: 'Random Forest'},
-                    {val: 'ann', text: 'ANN'},
-                    {val: 'svm', text: 'SVM'},
-                    {val: 'ada', text: 'AdaBoost'}
-                ];
-                var gloveModels = [
-                    {val: 'rf', text: 'Random Forest'},
-                    {val: 'ann', text: 'ANN'},
-                    {val: 'svm', text: 'SVM'},
-                    {val: 'ada', text: 'AdaBoost'}
-                ];
-                var models = (yontem === 'tfidf') ? tfidfModels : (yontem === 'w2v' ? w2vModels : gloveModels);
 
-                // Backend'den secili_model'i alın
-                var seciliModel = "{{ secili_model }}";
-                for (var i = 0; i < models.length; i++) {
-                    var opt = document.createElement('option');
-                    opt.value = models[i].val;
-                    opt.text = models[i].text;
-                    if (models[i].val === seciliModel) {
-                        opt.selected = true;
-                    }
+                // Modelleri yönteme göre hazırla
+                const tfidfModels = [
+                    { val: 'rf', text: 'Random Forest' },
+                    { val: 'ann', text: 'ANN' },
+                    { val: 'svm', text: 'SVM' },
+                    { val: 'ada', text: 'AdaBoost' },
+                    { val: 'nb', text: 'Naive Bayes' }
+                ];
+                const w2vModels = [
+                    { val: 'rf', text: 'Random Forest' },
+                    { val: 'ann', text: 'ANN' },
+                    { val: 'svm', text: 'SVM' },
+                    { val: 'ada', text: 'AdaBoost' }
+                ];
+                const gloveModels = [
+                    { val: 'rf', text: 'Random Forest' },
+                    { val: 'ann', text: 'ANN' },
+                    { val: 'svm', text: 'SVM' },
+                    { val: 'ada', text: 'AdaBoost' }
+                ];
+
+                const models = yontem === 'tfidf' ? tfidfModels : (yontem === 'w2v' ? w2vModels : gloveModels);
+
+                // Seçenekleri doldur
+                modelSelect.innerHTML = '';
+                const seciliModel = "{{ secili_model }}";
+                models.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.val;
+                    opt.text = m.text;
+                    if (m.val === seciliModel) opt.selected = true;
                     modelSelect.appendChild(opt);
-                }
+                });
             }
-            window.onload = updateModelOptions;
+
+            // Sayfa yüklendiğinde ve yöntem değiştiğinde çalıştır
+            document.addEventListener('DOMContentLoaded', updateModelOptions);
             </script>
         </form>
         {% if skorlar %}

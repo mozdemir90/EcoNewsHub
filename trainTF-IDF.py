@@ -11,10 +11,25 @@ import os
 df_train = pd.read_excel("data/training_data.xlsx")
 df_test = pd.read_excel("data/analiz_sonuclari2.xlsx")
 
-# 2. TF-IDF vektörleştirici (sadece özet metinleriyle)
-vectorizer = TfidfVectorizer(max_features=2000)
-X_train = vectorizer.fit_transform(df_train["ozet"].astype(str))
-X_test = vectorizer.transform(df_test["ozet"].astype(str))
+# 2. TF-IDF vektörleştirici
+# Bilgi kaybını azaltmak için 'content' + 'ozet' birleşik metni kullan
+train_text = (
+    df_train.get("content", "").astype(str).fillna("") + " " + df_train.get("ozet", "").astype(str).fillna("")
+).str.strip()
+test_text = (
+    df_test.get("content", "").astype(str).fillna("") + " " + df_test.get("ozet", "").astype(str).fillna("")
+).str.strip()
+
+# Daha fazla bağlam için unigram + bigram, daha sağlam için min_df/max_df ve sublinear_tf
+vectorizer = TfidfVectorizer(
+    max_features=10000,
+    ngram_range=(1, 2),
+    min_df=2,
+    max_df=0.9,
+    sublinear_tf=True
+)
+X_train = vectorizer.fit_transform(train_text)
+X_test = vectorizer.transform(test_text)
 
 varliklar = ["dolar_skor", "altin_skor", "borsa_skor", "bitcoin_skor"]
 tahminler_rf = {}

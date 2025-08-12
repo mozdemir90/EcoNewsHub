@@ -18,7 +18,10 @@ def tokenize(text):
     return str(text).lower().split()
 
 # 3. Word2Vec modeli eğit (veya hazır model yükle)
-sentences = df_train["ozet"].astype(str).apply(tokenize).tolist()
+# Bilgi kaybını azaltmak için 'content' + 'ozet' birleşik metni ile eğit
+sentences = (
+    df_train.get("content", "").astype(str).fillna("") + " " + df_train.get("ozet", "").astype(str).fillna("")
+).apply(tokenize).tolist()
 w2v_model = Word2Vec(sentences, vector_size=100, window=5, min_count=2, workers=4)
 # Alternatif: w2v_model = KeyedVectors.load_word2vec_format('PATH/GoogleNews-vectors-negative300.bin', binary=True)
 
@@ -45,14 +48,16 @@ def get_sentence_vector_glove(tokens, glove):
     else:
         return np.zeros(glove.vector_size)
 
-# 6. Eğitim ve test için vektör matrisleri oluştur (Word2Vec)
-X_train_w2v = np.vstack([get_sentence_vector_w2v(tokenize(text), w2v_model) for text in df_train["ozet"]])
-X_test_w2v = np.vstack([get_sentence_vector_w2v(tokenize(text), w2v_model) for text in df_test["ozet"]])
+# 6. Eğitim ve test için vektör matrisleri oluştur (Word2Vec) - birleşik metin
+train_texts = (df_train.get("content", "").astype(str).fillna("") + " " + df_train.get("ozet", "").astype(str).fillna("")).tolist()
+test_texts = (df_test.get("content", "").astype(str).fillna("") + " " + df_test.get("ozet", "").astype(str).fillna("")).tolist()
+X_train_w2v = np.vstack([get_sentence_vector_w2v(tokenize(text), w2v_model) for text in train_texts])
+X_test_w2v = np.vstack([get_sentence_vector_w2v(tokenize(text), w2v_model) for text in test_texts])
 
-# 6b. Eğitim ve test için vektör matrisleri oluştur (GloVe)
+# 6b. Eğitim ve test için vektör matrisleri oluştur (GloVe) - birleşik metin
 if glove_vectors is not None:
-    X_train_glove = np.vstack([get_sentence_vector_glove(tokenize(text), glove_vectors) for text in df_train["ozet"]])
-    X_test_glove = np.vstack([get_sentence_vector_glove(tokenize(text), glove_vectors) for text in df_test["ozet"]])
+    X_train_glove = np.vstack([get_sentence_vector_glove(tokenize(text), glove_vectors) for text in train_texts])
+    X_test_glove = np.vstack([get_sentence_vector_glove(tokenize(text), glove_vectors) for text in test_texts])
 
 # 7. Her varlık için model eğit ve tahmin et (Word2Vec)
 os.makedirs("models", exist_ok=True)

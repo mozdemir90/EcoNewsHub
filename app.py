@@ -25,6 +25,8 @@ GLOVE_PATH = "data/glove.6B.100d.txt"
 DL_MODELS = {}
 DL_TOKENIZER = None
 
+
+
 # Deep Learning modellerini yükle (varsa)
 try:
     import tensorflow as tf
@@ -65,6 +67,9 @@ except ImportError:
     print("⚠️ TensorFlow bulunamadı, Deep Learning modelleri kullanılamayacak")
 except Exception as e:
     print(f"⚠️ Deep Learning modelleri yüklenemedi: {e}")
+
+
+
 glove_vectors = None
 if os.path.exists(GLOVE_PATH):
     glove_vectors = KeyedVectors.load_word2vec_format(GLOVE_PATH, binary=False, no_header=True)
@@ -242,13 +247,28 @@ def predict_deep_learning(text, model_name):
         # Tahmin yap
         predictions = DL_MODELS[model_name].predict(padded, verbose=0)
         
-        # Daha iyi yuvarlama: 0.5'ten büyükse yukarı, küçükse aşağı
+        # Debug: Tahmin değerlerini yazdır
+        print(f"Raw predictions for {model_name}: {predictions[0]}")
+        
+        # Daha agresif yuvarlama - daha çeşitli skorlar için
         rounded_preds = []
         for pred in predictions[0]:
-            if pred >= 0.5:
-                rounded_preds.append(min(5, int(np.ceil(pred))))
+            # 0-5 aralığına sınırla
+            pred = np.clip(pred, 0, 5)
+            
+            # Daha agresif yuvarlama - 5 skorunu da dahil et
+            if pred < 1.5:
+                rounded_preds.append(0)
+            elif pred < 2.5:
+                rounded_preds.append(1)
+            elif pred < 3.5:
+                rounded_preds.append(2)
+            elif pred < 4.5:
+                rounded_preds.append(3)
             else:
-                rounded_preds.append(max(0, int(np.floor(pred))))
+                rounded_preds.append(5)  # 4.5+ değerler 5'e yuvarlanmalı
+        
+        print(f"Rounded predictions for {model_name}: {rounded_preds}")
         
         return {
             "Dolar": rounded_preds[0],
@@ -259,6 +279,8 @@ def predict_deep_learning(text, model_name):
     except Exception as e:
         print(f"Deep Learning tahmin hatası: {e}")
         return None
+
+
 
 def haber_temizle(metin):
     """Haber metnini temizler - gereksiz boşlukları ve satırları kaldırır"""
@@ -336,6 +358,7 @@ def index():
                     return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
                 log_user_action(request.remote_addr, f"tahmin_{secili_yontem}_{secili_dl_model}", haber, skorlar, secili_model)
                 return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+
             if secili_yontem == "tfidf" and secili_model == "nb":
                 X_input = X.toarray()
             else:
