@@ -32,6 +32,10 @@ try:
     import tensorflow as tf
     from tensorflow.keras.models import load_model
     from tensorflow.keras.preprocessing.sequence import pad_sequences
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    print("⚠️ TensorFlow bulunamadı, Deep Learning modelleri kullanılamayacak")
+    TENSORFLOW_AVAILABLE = False
     
     # Tokenizer yükle
     if os.path.exists("models/deep_learning/tokenizer.pkl"):
@@ -63,8 +67,6 @@ try:
     
     print(f"Deep Learning modelleri: {list(DL_MODELS.keys())}")
     
-except ImportError:
-    print("⚠️ TensorFlow bulunamadı, Deep Learning modelleri kullanılamayacak")
 except Exception as e:
     print(f"⚠️ Deep Learning modelleri yüklenemedi: {e}")
 
@@ -234,6 +236,9 @@ def get_sentence_vector_glove(tokens, glove):
 
 def predict_deep_learning(text, model_name):
     """Deep Learning modeli ile tahmin yap"""
+    if not TENSORFLOW_AVAILABLE:
+        return None
+    
     if model_name not in DL_MODELS or DL_TOKENIZER is None:
         print(f"Model kontrolü: {model_name} in DL_MODELS: {model_name in DL_MODELS}")
         print(f"Tokenizer kontrolü: DL_TOKENIZER is None: {DL_TOKENIZER is None}")
@@ -448,4 +453,5 @@ def ekle():
     return render_template("ekle.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5050)
+    port = int(os.environ.get("PORT", 5050))
+    app.run(debug=False, host="0.0.0.0", port=port)
