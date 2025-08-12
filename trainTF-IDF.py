@@ -51,7 +51,7 @@ for varlik in varliklar:
     model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
     model_rf.fit(X_train, y)
     tahmin_rf = model_rf.predict(X_test)
-    tahmin_rf = [min(5, max(0, round(t))) for t in tahmin_rf]
+    tahmin_rf = [min(5, max(1, round(t))) for t in tahmin_rf]
     tahminler_rf[varlik + "_rf"] = tahmin_rf
     rf_models[varlik] = model_rf
     joblib.dump(model_rf, f"models/{varlik}_rf_model.pkl")
@@ -60,7 +60,7 @@ for varlik in varliklar:
     model_svm = SVR()
     model_svm.fit(X_train, y)
     tahmin_svm = model_svm.predict(X_test)
-    tahmin_svm = [min(5, max(0, round(t))) for t in tahmin_svm]
+    tahmin_svm = [min(5, max(1, round(t))) for t in tahmin_svm]
     tahminler_svm[varlik + "_svm"] = tahmin_svm
     svm_models[varlik] = model_svm
     joblib.dump(model_svm, f"models/{varlik}_svm_model.pkl")
@@ -69,7 +69,7 @@ for varlik in varliklar:
     model_nb = GaussianNB()
     model_nb.fit(X_train.toarray(), y)
     tahmin_nb = model_nb.predict(X_test.toarray())
-    tahmin_nb = [min(5, max(0, round(t))) for t in tahmin_nb]
+    tahmin_nb = [min(5, max(1, round(t))) for t in tahmin_nb]
     tahminler_nb[varlik + "_nb"] = tahmin_nb
     nb_models[varlik] = model_nb
     joblib.dump(model_nb, f"models/{varlik}_nb_model.pkl")
@@ -78,7 +78,7 @@ for varlik in varliklar:
     model_ada = AdaBoostRegressor(n_estimators=100, random_state=42)
     model_ada.fit(X_train.toarray(), y)
     tahmin_ada = model_ada.predict(X_test.toarray())
-    tahmin_ada = [min(5, max(0, round(t))) for t in tahmin_ada]
+    tahmin_ada = [min(5, max(1, round(t))) for t in tahmin_ada]
     tahminler_ada[varlik + "_ada"] = tahmin_ada
     ada_models[varlik] = model_ada
     joblib.dump(model_ada, f"models/{varlik}_ada_model.pkl")
@@ -87,7 +87,7 @@ for varlik in varliklar:
     model_ann = MLPRegressor(hidden_layer_sizes=(100,), max_iter=300, random_state=42)
     model_ann.fit(X_train.toarray(), y)
     tahmin_ann = model_ann.predict(X_test.toarray())
-    tahmin_ann = [min(5, max(0, round(t))) for t in tahmin_ann]
+    tahmin_ann = [min(5, max(1, round(t))) for t in tahmin_ann]
     tahminler_ann[varlik + "_ann"] = tahmin_ann
     ann_models[varlik] = model_ann
     joblib.dump(model_ann, f"models/{varlik}_ann_model.pkl")

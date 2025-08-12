@@ -365,10 +365,10 @@ def index():
                 X_input = X
             modeller = model_files[secili_yontem][secili_model]
             skorlar = {
-                "Dolar": min(5, max(0, round(modeller["Dolar"].predict(X_input)[0]))),
-                "Altın": min(5, max(0, round(modeller["Altın"].predict(X_input)[0]))),
-                "Borsa": min(5, max(0, round(modeller["Borsa"].predict(X_input)[0]))),
-                "Bitcoin": min(5, max(0, round(modeller["Bitcoin"].predict(X_input)[0]))),
+                "Dolar": min(5, max(1, round(modeller["Dolar"].predict(X_input)[0]))),
+                "Altın": min(5, max(1, round(modeller["Altın"].predict(X_input)[0]))),
+                "Borsa": min(5, max(1, round(modeller["Borsa"].predict(X_input)[0]))),
+                "Bitcoin": min(5, max(1, round(modeller["Bitcoin"].predict(X_input)[0]))),
             }
         log_user_action(request.remote_addr, f"tahmin_{secili_yontem}", haber, skorlar, secili_model)
     return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
@@ -438,10 +438,10 @@ def ekle():
                 else:
                     X_input = X
                 skorlar = {
-                    "Dolar": min(5, max(0, round(modeller["Dolar"].predict(X_input)[0]))),
-                    "Altın": min(5, max(0, round(modeller["Altın"].predict(X_input)[0]))),
-                    "Borsa": min(5, max(0, round(modeller["Borsa"].predict(X_input)[0]))),
-                    "Bitcoin": min(5, max(0, round(modeller["Bitcoin"].predict(X_input)[0]))),
+                    "Dolar": min(5, max(1, round(modeller["Dolar"].predict(X_input)[0]))),
+                    "Altın": min(5, max(1, round(modeller["Altın"].predict(X_input)[0]))),
+                    "Borsa": min(5, max(1, round(modeller["Borsa"].predict(X_input)[0]))),
+                    "Bitcoin": min(5, max(1, round(modeller["Bitcoin"].predict(X_input)[0]))),
                 }
             # Log tahmin işlemi (ekle sayfasında)
             log_user_action(request.remote_addr, "tahmin_ekle", haber, skorlar, secili_model)

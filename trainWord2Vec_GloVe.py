@@ -66,22 +66,22 @@ for varlik in varliklar:
     # Random Forest
     model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
     model_rf.fit(X_train_w2v, y)
-    df_test[varlik + "_rf_w2v"] = [min(5, max(0, round(t))) for t in model_rf.predict(X_test_w2v)]
+    df_test[varlik + "_rf_w2v"] = [min(5, max(1, round(t))) for t in model_rf.predict(X_test_w2v)]
     joblib.dump(model_rf, f"models/{varlik}_rf_w2v_model.pkl")
     # SVM
     model_svm = SVR()
     model_svm.fit(X_train_w2v, y)
-    df_test[varlik + "_svm_w2v"] = [min(5, max(0, round(t))) for t in model_svm.predict(X_test_w2v)]
+    df_test[varlik + "_svm_w2v"] = [min(5, max(1, round(t))) for t in model_svm.predict(X_test_w2v)]
     joblib.dump(model_svm, f"models/{varlik}_svm_w2v_model.pkl")
     # ANN
     model_ann = MLPRegressor(hidden_layer_sizes=(100,), max_iter=300, random_state=42)
     model_ann.fit(X_train_w2v, y)
-    df_test[varlik + "_ann_w2v"] = [min(5, max(0, round(t))) for t in model_ann.predict(X_test_w2v)]
+    df_test[varlik + "_ann_w2v"] = [min(5, max(1, round(t))) for t in model_ann.predict(X_test_w2v)]
     joblib.dump(model_ann, f"models/{varlik}_ann_w2v_model.pkl")
     # ADA
     model_ada = AdaBoostRegressor(n_estimators=100, random_state=42)
     model_ada.fit(X_train_w2v, y)
-    df_test[varlik + "_ada_w2v"] = [min(5, max(0, round(t))) for t in model_ada.predict(X_test_w2v)]
+    df_test[varlik + "_ada_w2v"] = [min(5, max(1, round(t))) for t in model_ada.predict(X_test_w2v)]
     joblib.dump(model_ada, f"models/{varlik}_ada_w2v_model.pkl")
 
 # 7b. Her varlık için model eğit ve tahmin et (GloVe)
@@ -91,22 +91,22 @@ if glove_vectors is not None:
         # Random Forest
         model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
         model_rf.fit(X_train_glove, y)
-        df_test[varlik + "_rf_glove"] = [min(5, max(0, round(t))) for t in model_rf.predict(X_test_glove)]
+        df_test[varlik + "_rf_glove"] = [min(5, max(1, round(t))) for t in model_rf.predict(X_test_glove)]
         joblib.dump(model_rf, f"models/{varlik}_rf_glove_model.pkl")
         # SVM
         model_svm = SVR()
         model_svm.fit(X_train_glove, y)
-        df_test[varlik + "_svm_glove"] = [min(5, max(0, round(t))) for t in model_svm.predict(X_test_glove)]
+        df_test[varlik + "_svm_glove"] = [min(5, max(1, round(t))) for t in model_svm.predict(X_test_glove)]
         joblib.dump(model_svm, f"models/{varlik}_svm_glove_model.pkl")
         # ANN
         model_ann = MLPRegressor(hidden_layer_sizes=(100,), max_iter=300, random_state=42)
         model_ann.fit(X_train_glove, y)
-        df_test[varlik + "_ann_glove"] = [min(5, max(0, round(t))) for t in model_ann.predict(X_test_glove)]
+        df_test[varlik + "_ann_glove"] = [min(5, max(1, round(t))) for t in model_ann.predict(X_test_glove)]
         joblib.dump(model_ann, f"models/{varlik}_ann_glove_model.pkl")
         # ADA
         model_ada = AdaBoostRegressor(n_estimators=100, random_state=42)
         model_ada.fit(X_train_glove, y)
-        df_test[varlik + "_ada_glove"] = [min(5, max(0, round(t))) for t in model_ada.predict(X_test_glove)]
+        df_test[varlik + "_ada_glove"] = [min(5, max(1, round(t))) for t in model_ada.predict(X_test_glove)]
         joblib.dump(model_ada, f"models/{varlik}_ada_glove_model.pkl")
 
 # 8. Sonuçları kaydet

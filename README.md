@@ -112,9 +112,8 @@ Bu script şunları oluşturur:
 
 ## 📝 Skor Sistemi
 
-- **0:** Güçlü düşüş etkisi
-- **1:** Düşüş etkisi
-- **2:** Hafif düşüş etkisi
+- **1:** Güçlü düşüş etkisi
+- **2:** Düşüş etkisi
 - **3:** Nötr/etkisiz
 - **4:** Yükseliş etkisi
 - **5:** Güçlü yükseliş etkisi
