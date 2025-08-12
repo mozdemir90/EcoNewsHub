@@ -21,8 +21,8 @@ class ModelComparator:
         files = {
             'TF-IDF': 'data/analiz_sonuclari2_tahminli_TF-IDF.xlsx',
             'Word2Vec': 'data/analiz_sonuclari2_tahminli_w2v.xlsx',
+            'GloVe': 'data/analiz_sonuclari2_tahminli_glove.xlsx',
             'Deep Learning': 'data/analiz_sonuclari2_tahminli_DL.xlsx',
-
         }
         
         self.test_data = {}
@@ -71,8 +71,17 @@ class ModelComparator:
                 # Gerçek değerler
                 y_true = self.original_test[varlik].values
                 
-                # Tahmin edilen değerler (farklı sütun isimleri için)
-                pred_columns = [col for col in test_df.columns if varlik in col and 'skor' in col and col != varlik]
+                # Tahmin edilen değerler (model bazında seçim)
+                if model_name == 'Word2Vec':
+                    pred_columns = [col for col in test_df.columns if varlik in col and 'w2v' in col]
+                elif model_name == 'GloVe':
+                    pred_columns = [col for col in test_df.columns if varlik in col and 'glove' in col]
+                elif model_name == 'TF-IDF':
+                    pred_columns = [col for col in test_df.columns if varlik in col and ('rf' in col or 'svm' in col or 'nb' in col or 'ada' in col or 'ann' in col) and 'w2v' not in col and 'glove' not in col]
+                elif model_name == 'Deep Learning':
+                    pred_columns = [col for col in test_df.columns if varlik in col and ('cnn' in col or 'lstm' in col)]
+                else:
+                    pred_columns = [col for col in test_df.columns if varlik in col and 'skor' in col and col != varlik]
                 
                 if pred_columns:
                     # İlk tahmin sütununu kullan
