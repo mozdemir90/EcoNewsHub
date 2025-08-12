@@ -78,97 +78,119 @@ if os.path.exists(GLOVE_PATH):
 else:
     print(f"UYARI: {GLOVE_PATH} bulunamadı, GloVe ile tahmin yapılamaz.")
 
+# Model dosyalarını güvenli şekilde yükle
+def load_model_safe(model_path):
+    """Model dosyasını güvenli şekilde yükle"""
+    try:
+        if os.path.exists(model_path):
+            return joblib.load(model_path)
+        else:
+            print(f"⚠️ Model dosyası bulunamadı: {model_path}")
+            return None
+    except Exception as e:
+        print(f"❌ Model yükleme hatası {model_path}: {e}")
+        return None
+
 model_files = {
     "tfidf": {
         "rf": {
-            "Dolar": joblib.load("models/dolar_skor_rf_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_rf_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_rf_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_rf_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_rf_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_rf_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_rf_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_rf_model.pkl"),
         },
         "ann": {
-            "Dolar": joblib.load("models/dolar_skor_ann_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_ann_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_ann_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_ann_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_ann_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_ann_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_ann_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_ann_model.pkl"),
         },
         "svm": {
-            "Dolar": joblib.load("models/dolar_skor_svm_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_svm_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_svm_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_svm_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_svm_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_svm_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_svm_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_svm_model.pkl"),
         },
         "nb": {
-            "Dolar": joblib.load("models/dolar_skor_nb_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_nb_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_nb_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_nb_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_nb_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_nb_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_nb_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_nb_model.pkl"),
         },
         "ada": {
-            "Dolar": joblib.load("models/dolar_skor_ada_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_ada_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_ada_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_ada_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_ada_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_ada_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_ada_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_ada_model.pkl"),
         }
     },
     "w2v": {
         "rf": {
-            "Dolar": joblib.load("models/dolar_skor_rf_w2v_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_rf_w2v_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_rf_w2v_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_rf_w2v_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_rf_w2v_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_rf_w2v_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_rf_w2v_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_rf_w2v_model.pkl"),
         },
         "ann": {
-            "Dolar": joblib.load("models/dolar_skor_ann_w2v_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_ann_w2v_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_ann_w2v_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_ann_w2v_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_ann_w2v_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_ann_w2v_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_ann_w2v_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_ann_w2v_model.pkl"),
         },
         "svm": {
-            "Dolar": joblib.load("models/dolar_skor_svm_w2v_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_svm_w2v_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_svm_w2v_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_svm_w2v_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_svm_w2v_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_svm_w2v_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_svm_w2v_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_svm_w2v_model.pkl"),
         },
         "ada": {
-            "Dolar": joblib.load("models/dolar_skor_ada_w2v_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_ada_w2v_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_ada_w2v_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_ada_w2v_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_ada_w2v_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_ada_w2v_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_ada_w2v_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_ada_w2v_model.pkl"),
         }
     },
     "glove": {
         "rf": {
-            "Dolar": joblib.load("models/dolar_skor_rf_glove_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_rf_glove_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_rf_glove_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_rf_glove_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_rf_glove_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_rf_glove_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_rf_glove_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_rf_glove_model.pkl"),
         },
         "ann": {
-            "Dolar": joblib.load("models/dolar_skor_ann_glove_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_ann_glove_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_ann_glove_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_ann_glove_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_ann_glove_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_ann_glove_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_ann_glove_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_ann_glove_model.pkl"),
         },
         "svm": {
-            "Dolar": joblib.load("models/dolar_skor_svm_glove_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_svm_glove_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_svm_glove_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_svm_glove_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_svm_glove_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_svm_glove_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_svm_glove_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_svm_glove_model.pkl"),
         },
         "ada": {
-            "Dolar": joblib.load("models/dolar_skor_ada_glove_model.pkl"),
-            "Altın": joblib.load("models/altin_skor_ada_glove_model.pkl"),
-            "Borsa": joblib.load("models/borsa_skor_ada_glove_model.pkl"),
-            "Bitcoin": joblib.load("models/bitcoin_skor_ada_glove_model.pkl"),
+            "Dolar": load_model_safe("models/dolar_skor_ada_glove_model.pkl"),
+            "Altın": load_model_safe("models/altin_skor_ada_glove_model.pkl"),
+            "Borsa": load_model_safe("models/borsa_skor_ada_glove_model.pkl"),
+            "Bitcoin": load_model_safe("models/bitcoin_skor_ada_glove_model.pkl"),
         }
     }
 }
 
 # TF-IDF vektörizer
-vectorizer_tfidf = joblib.load("models/tfidf_vectorizer.pkl")
+vectorizer_tfidf = load_model_safe("models/tfidf_vectorizer.pkl")
 # Word2Vec yükle
-w2v_model = Word2Vec.load("models/word2vec_model.model")
+try:
+    if os.path.exists("models/word2vec_model.model"):
+        w2v_model = Word2Vec.load("models/word2vec_model.model")
+        print("✅ Word2Vec modeli yüklendi")
+    else:
+        w2v_model = None
+        print("⚠️ Word2Vec modeli bulunamadı")
+except Exception as e:
+    w2v_model = None
+    print(f"❌ Word2Vec modeli yüklenemedi: {e}")
 
 DATA_PATH = "data/training_data.xlsx"
 
@@ -355,12 +377,25 @@ def index():
                     return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
             elif secili_yontem == "deep_learning":
                 # Deep Learning tahmini
+                if not TENSORFLOW_AVAILABLE:
+                    skorlar = {"Dolar": "TensorFlow Yok", "Altın": "TensorFlow Yok", "Borsa": "TensorFlow Yok", "Bitcoin": "TensorFlow Yok"}
+                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                
                 dl_result = predict_deep_learning(haber, secili_dl_model)
                 if dl_result is not None:
                     skorlar = dl_result
                 else:
-                    skorlar = {"Dolar": "DL Model Yok", "Altın": "DL Model Yok", "Borsa": "DL Model Yok", "Bitcoin": "DL Model Yok"}
-                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                    # DL modelleri yoksa TF-IDF ile fallback yap
+                    print("DL modelleri bulunamadı, TF-IDF ile fallback yapılıyor...")
+                    vectorizer_tfidf = get_vectorizer_tfidf()
+                    X = vectorizer_tfidf.transform([haber])
+                    modeller = model_files["tfidf"]["rf"]  # Random Forest ile fallback
+                    skorlar = {
+                        "Dolar": min(5, max(1, round(modeller["Dolar"].predict(X)[0]))),
+                        "Altın": min(5, max(1, round(modeller["Altın"].predict(X)[0]))),
+                        "Borsa": min(5, max(1, round(modeller["Borsa"].predict(X)[0]))),
+                        "Bitcoin": min(5, max(1, round(modeller["Bitcoin"].predict(X)[0]))),
+                    }
                 log_user_action(request.remote_addr, f"tahmin_{secili_yontem}_{secili_dl_model}", haber, skorlar, secili_model)
                 return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
 
@@ -368,7 +403,19 @@ def index():
                 X_input = X.toarray()
             else:
                 X_input = X
+            
+            # Model kontrolü
+            if secili_yontem not in model_files or secili_model not in model_files[secili_yontem]:
+                skorlar = {"Dolar": "Model Yok", "Altın": "Model Yok", "Borsa": "Model Yok", "Bitcoin": "Model Yok"}
+                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+            
             modeller = model_files[secili_yontem][secili_model]
+            
+            # Model dosyalarının varlığını kontrol et
+            if any(model is None for model in modeller.values()):
+                skorlar = {"Dolar": "Model Dosyası Yok", "Altın": "Model Dosyası Yok", "Borsa": "Model Dosyası Yok", "Bitcoin": "Model Dosyası Yok"}
+                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+            
             skorlar = {
                 "Dolar": min(5, max(1, round(modeller["Dolar"].predict(X_input)[0]))),
                 "Altın": min(5, max(1, round(modeller["Altın"].predict(X_input)[0]))),
