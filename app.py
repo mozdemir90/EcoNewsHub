@@ -36,13 +36,21 @@ try:
 except ImportError:
     print("⚠️ TensorFlow bulunamadı, Deep Learning modelleri kullanılamayacak")
     TENSORFLOW_AVAILABLE = False
-    
-    # Tokenizer yükle
+
+# Tokenizer yükle (TensorFlow olsun ya da olmasın)
+try:
     if os.path.exists("models/deep_learning/tokenizer.pkl"):
         DL_TOKENIZER = joblib.load("models/deep_learning/tokenizer.pkl")
         print("✅ Deep Learning tokenizer yüklendi")
-    
-    # Modelleri yükle
+    else:
+        DL_TOKENIZER = None
+        print("⚠️ Deep Learning tokenizer dosyası bulunamadı")
+except Exception as e:
+    DL_TOKENIZER = None
+    print(f"❌ Deep Learning tokenizer yüklenemedi: {e}")
+
+# Modelleri yükle (sadece TensorFlow varsa)
+if TENSORFLOW_AVAILABLE:
     dl_model_files = {
         'cnn': 'models/deep_learning/cnn_model.h5',
         'lstm': 'models/deep_learning/lstm_model.h5',
@@ -64,11 +72,12 @@ except ImportError:
                         print(f"✅ {model_name} best modeli yüklendi")
                     except Exception as e2:
                         print(f"❌ {model_name} best modeli de yüklenemedi: {e2}")
+        else:
+            print(f"⚠️ {model_name} model dosyası bulunamadı: {model_path}")
     
     print(f"Deep Learning modelleri: {list(DL_MODELS.keys())}")
-    
-except Exception as e:
-    print(f"⚠️ Deep Learning modelleri yüklenemedi: {e}")
+else:
+    print("TensorFlow olmadığı için Deep Learning modelleri yüklenmedi")
 
 
 
