@@ -343,7 +343,7 @@
         <div class="api-section">
             <h3>🔑 API Key Management</h3>
             <p>Use this API key to authenticate your requests:</p>
-            <div class="api-key" id="apiKey">sk_live_1234567890abcdef1234567890abcdef12345678</div>
+            <div class="api-key" id="apiKey">demo_key_1234567890abcdef1234567890abcdef12345678</div>
             <button class="btn" onclick="regenerateApiKey()">🔄 Regenerate Key</button>
             <button class="btn btn-secondary" onclick="copyApiKey()">📋 Copy Key</button>
         </div>
@@ -437,7 +437,7 @@
     <script>
         // API Key Management
         function regenerateApiKey() {
-            const newKey = 'sk_live_' + Math.random().toString(36).substr(2, 40);
+            const newKey = 'demo_key_' + Math.random().toString(36).substr(2, 40);
             document.getElementById('apiKey').textContent = newKey;
             alert('API key regenerated successfully!');
         }
