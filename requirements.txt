@@ -11,19 +11,17 @@ lxml>=4.9.0
 pandas>=1.5.0
 numpy>=1.21.0
 scikit-learn
-scipy>=1.10.0
-flask>=2.2.0
-gunicorn>=20.1.0
-openpyxl>=3.0.10
-textblob>=0.17.1
-langdetect>=1.0.9
-nltk>=3.8
-gensim>=4.3.0
-joblib>=1.2.0
-matplotlib>=3.5.0
-seaborn>=0.11.0
-# tensorflow>=2.10.0  # Deployment için geçici olarak kaldırıldı
-# keras>=2.10.0       # Deployment için geçici olarak kaldırıldı
+flask
+openpyxl
+textblob
+langdetect
+nltk
+gensim
+joblib
+matplotlib
+seaborn
+tensorflow
+keras
 
 
 # Excel export functionality
