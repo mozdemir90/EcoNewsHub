@@ -344,7 +344,15 @@ def haber_ozetle(metin, dil='tr', max_cumle=2):
 
 @lru_cache(maxsize=1)
 def get_vectorizer_tfidf():
-    return joblib.load("models/tfidf_vectorizer.pkl")
+    try:
+        if os.path.exists("models/tfidf_vectorizer.pkl"):
+            return joblib.load("models/tfidf_vectorizer.pkl")
+        else:
+            print("⚠️ TF-IDF vectorizer dosyası bulunamadı")
+            return None
+    except Exception as e:
+        print(f"❌ TF-IDF vectorizer yükleme hatası: {e}")
+        return None
 
 app = Flask(__name__)
 
@@ -364,8 +372,15 @@ def index():
             skorlar = {"Dolar": 3, "Altın": 3, "Borsa": 3, "Bitcoin": 3}
         else:
             if secili_yontem == "tfidf":
+                vectorizer_tfidf = get_vectorizer_tfidf()
+                if vectorizer_tfidf is None:
+                    skorlar = {"Dolar": "TF-IDF Vectorizer Yok", "Altın": "TF-IDF Vectorizer Yok", "Borsa": "TF-IDF Vectorizer Yok", "Bitcoin": "TF-IDF Vectorizer Yok"}
+                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
                 X = vectorizer_tfidf.transform([haber])
             elif secili_yontem == "w2v":
+                if w2v_model is None:
+                    skorlar = {"Dolar": "Word2Vec Model Yok", "Altın": "Word2Vec Model Yok", "Borsa": "Word2Vec Model Yok", "Bitcoin": "Word2Vec Model Yok"}
+                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
                 tokens = tokenize(haber)
                 X = np.array([get_sentence_vector(tokens, w2v_model)])
             elif secili_yontem == "glove":
