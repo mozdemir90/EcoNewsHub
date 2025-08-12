@@ -140,9 +140,11 @@ Thumbs.db
 
 # Project specific
 data/*.xlsx
+data/glove.6B.*.txt
 models/*.pkl
 models/*.h5
 models/*.model
+models/deep_learning/
 logs/*.log
 output/
 *.log
