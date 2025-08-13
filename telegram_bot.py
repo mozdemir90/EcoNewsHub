@@ -181,13 +181,19 @@ class FinancialNewsBot:
                     
                     # BloombergHT yapısına göre link çıkar
                     link = ""
-                    # Share butonlarından link çıkar
+                    # Önce doğrudan haber linkini bulmaya çalış
                     share_links = item.find_all("a", href=True)
                     for share_link in share_links:
                         href = share_link.get("href", "")
+                        # Facebook, Twitter gibi sosyal medya linklerini filtrele
+                        if any(social in href.lower() for social in ['facebook', 'twitter', 'linkedin', 'whatsapp', 'mailto']):
+                            continue
+                        # Sadece BloombergHT ana linklerini al
                         if "bb.ht" in href or "bloomberght.com" in href:
-                            link = href
-                            break
+                            # Sosyal medya paylaşım linklerini filtrele
+                            if not any(param in href for param in ['sharer.php', 'intent/tweet', 'sharing/share-offsite']):
+                                link = href
+                                break
                     
                     # Eğer link bulunamazsa, varsayılan son dakika linki kullan
                     if not link:
