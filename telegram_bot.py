@@ -186,12 +186,12 @@ class FinancialNewsBot:
                     for share_link in share_links:
                         href = share_link.get("href", "")
                         # Facebook, Twitter gibi sosyal medya linklerini filtrele
-                        if any(social in href.lower() for social in ['facebook', 'twitter', 'linkedin', 'whatsapp', 'mailto']):
+                        if any(social in href.lower() for social in ['facebook', 'twitter', 'linkedin', 'whatsapp', 'mailto', 'bluesky', 'bsky']):
                             continue
                         # Sadece BloombergHT ana linklerini al
                         if "bb.ht" in href or "bloomberght.com" in href:
                             # Sosyal medya paylaşım linklerini filtrele
-                            if not any(param in href for param in ['sharer.php', 'intent/tweet', 'sharing/share-offsite']):
+                            if not any(param in href for param in ['sharer.php', 'intent/tweet', 'sharing/share-offsite', 'intent/compose']):
                                 link = href
                                 break
                     
