@@ -185,8 +185,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-- **GitHub:** [@mozdemir90](https://github.com/yourusername)
-- **LinkedIn:** [muammer-özdemir-05629933](https://linkedin.com/in/yourprofile)
+- **GitHub:** [@mozdemir90](https://github.com/mozdemir90)
+- **LinkedIn:** [muammer özdemir](https://linkedin.com/in/muammer-özdemir-05629933)
 - **Email:** your.email@example.com
 
 ## 🙏 Acknowledgments
