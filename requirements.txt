@@ -22,6 +22,9 @@ matplotlib
 seaborn
 tensorflow
 keras
+requests
+schedule
+python-telegram-bot
 
 
 # Excel export functionality

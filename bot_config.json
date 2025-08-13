@@ -1,0 +1,11 @@
+{
+    "bot_token": "7599491092:AAFJz1K9GPGwY_DugwDNtRIzaEe6E6vZzD0",
+    "chat_id": "1660853466",
+    "check_interval_minutes": 30,
+    "news_sources": ["CNBC", "BloombergHT"],
+    "assets": ["USD", "Gold", "Stock Market", "Bitcoin"],
+    "model_type": "rf",
+    "max_news_per_batch": 10,
+    "enable_logging": true,
+    "log_level": "INFO"
+}
