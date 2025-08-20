@@ -1,4 +1,4 @@
-# Financial News Impact Analysis & Prediction System
+# EcoNewsHub - Financial News Impact Analysis & Prediction System
 
 A comprehensive machine learning system that analyzes financial news and predicts their impact on financial assets (USD, Gold, Stock Market, Bitcoin) using multiple NLP and ML approaches. The system supports both Turkish and English financial news analysis. Features include automated news fetching, Telegram bot integration, and organized model management.
 
