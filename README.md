@@ -41,15 +41,15 @@ A comprehensive machine learning system that analyzes financial news and predict
 | Model | Average R² Score | Best Asset | Performance |
 |-------|------------------|------------|-------------|
 | **TF-IDF** | -0.1724 | Bitcoin (R² = 0.1745) | ⭐ Best Overall |
-| **GloVe** | -0.1782 | Altın/Borsa | Good Performance |
-| **Word2Vec** | -0.8371 | Dolar | Moderate Performance |
+| **GloVe** | -0.1782 | Gold/BIST100 | Good Performance |
+| **Word2Vec** | -0.8371 | Dollar | Moderate Performance |
 | **Deep Learning** | -13.1799 | Needs improvement | 🔧 Under Development |
 
 ### 🏆 Best Performance by Asset:
 - **Bitcoin**: TF-IDF (R² = 0.1745) - **Positive Score!**
-- **Dolar**: Word2Vec (R² = -0.3599)
-- **Altın**: GloVe (R² = -0.0304)
-- **Borsa**: GloVe (R² = -0.0650)
+- **Dollar**: Word2Vec (R² = -0.3599)
+- **Gold**: GloVe (R² = -0.0304)
+- **BIST100**: GloVe (R² = -0.0650)
 
 ## 📁 Project Structure
 
@@ -139,7 +139,7 @@ python telegram_interactive_bot.py
 **Commands:**
 - Send any text message for financial impact analysis
 - `/help` or `/yardim` - Show usage instructions
-- `/ekle <text> | dolar:3 altin:4 borsa:2 bitcoin:5` - Add training data
+- `/ekle <text> | dollar:3 gold:4 bist100:2 bitcoin:5` - Add training data
 - `/ekle_interactive <text>` - Interactive scoring mode
 
 ### Automated News Bot
