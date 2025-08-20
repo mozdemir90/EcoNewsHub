@@ -169,6 +169,9 @@ bot_token.txt
 !README.md
 !*.example.json
 
+# GloVe word vectors (large file)
+data/glove.6B.100d.txt
+
 # Model files (large binary files)
 *.h5
 *.pkl
