@@ -1,0 +1,11 @@
+{
+    "bot_token": "YOUR_BOT_TOKEN_HERE",
+    "chat_id": "YOUR_CHAT_ID_HERE",
+    "admin_users": ["YOUR_USERNAME_HERE"],
+    "news_sources": [
+        "https://www.bloomberght.com/son-dakika",
+        "https://www.cnnturk.com/ekonomi"
+    ],
+    "cron_schedule": "*/10 * * * *",
+    "log_level": "INFO"
+}

@@ -102,9 +102,14 @@ pip install -r requirements.txt
 
 3. **Configure Telegram Bot:**
 ```bash
+# Copy the example config file
+cp bot_config.example.json bot_config.json
+
 # Edit bot_config.json with your bot token
 {
-    "bot_token": "YOUR_BOT_TOKEN_HERE"
+    "bot_token": "YOUR_BOT_TOKEN_HERE",
+    "chat_id": "YOUR_CHAT_ID_HERE",
+    "admin_users": ["YOUR_USERNAME_HERE"]
 }
 ```
 
