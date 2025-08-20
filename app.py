@@ -521,7 +521,9 @@ def ekle():
                 }
             # Log tahmin işlemi (ekle sayfasında)
             log_user_action(request.remote_addr, "tahmin_ekle", haber, skorlar, secili_model)
-            return render_template("add.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
+    
+    # GET request veya POST işlemi sonrası template'i render et
+    return render_template("add.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)
