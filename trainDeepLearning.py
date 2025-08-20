@@ -77,7 +77,7 @@ class DeepLearningTrainer:
         print(f"Test şekli: {X_test.shape}")
         
         # Tokenizer'ı kaydet
-        joblib.dump(self.tokenizer, "models/deep_learning/tokenizer.pkl")
+        joblib.dump(self.tokenizer, "models/deeplearning/tokenizer.pkl")
         
     def create_cnn_model(self):
         """1D CNN modeli oluştur"""
@@ -193,7 +193,7 @@ class DeepLearningTrainer:
         )
         
         model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
-            f"models/deep_learning/{model_name}_best.h5",
+            f"models/deeplearning/{model_name}_best.h5",
             monitor='val_loss',
             save_best_only=True,
             verbose=1
@@ -309,7 +309,7 @@ class DeepLearningTrainer:
             results[model_name] = {'mse': mse, 'mae': mae, 'r2': r2}
             
             # Modeli kaydet
-            model.save(f"models/deep_learning/{model_name}_model.h5")
+            model.save(f"models/deeplearning/{model_name}_model.h5")
         
         return results
     
@@ -353,13 +353,13 @@ class DeepLearningTrainer:
         
         print("\n🎉 Deep Learning eğitimi tamamlandı!")
         print("📁 Sonuçlar:")
-        print("- models/deep_learning/ klasöründe modeller")
+        print("- models/deeplearning/ klasöründe modeller")
         print("- data/analiz_sonuclari2_tahminli_DL.xlsx test sonuçları")
         print("- data/deep_learning_performance.xlsx performans özeti")
 
 if __name__ == "__main__":
     # Klasörleri oluştur
-    os.makedirs("models/deep_learning", exist_ok=True)
+    os.makedirs("models/deeplearning", exist_ok=True)
     os.makedirs("data", exist_ok=True)
     
     # Eğitimi başlat

@@ -60,29 +60,29 @@ if glove_vectors is not None:
     X_test_glove = np.vstack([get_sentence_vector_glove(tokenize(text), glove_vectors) for text in test_texts])
 
 # 7. Her varlık için model eğit ve tahmin et (Word2Vec)
-os.makedirs("models", exist_ok=True)
+os.makedirs("models/word2vec", exist_ok=True)
 for varlik in varliklar:
     y = df_train[varlik]
     # Random Forest
     model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
     model_rf.fit(X_train_w2v, y)
     df_test[varlik + "_rf_w2v"] = [min(5, max(1, round(t))) for t in model_rf.predict(X_test_w2v)]
-    joblib.dump(model_rf, f"models/{varlik}_rf_w2v_model.pkl")
+    joblib.dump(model_rf, f"models/word2vec/{varlik}_rf_w2v_model.pkl")
     # SVM
     model_svm = SVR()
     model_svm.fit(X_train_w2v, y)
     df_test[varlik + "_svm_w2v"] = [min(5, max(1, round(t))) for t in model_svm.predict(X_test_w2v)]
-    joblib.dump(model_svm, f"models/{varlik}_svm_w2v_model.pkl")
+    joblib.dump(model_svm, f"models/word2vec/{varlik}_svm_w2v_model.pkl")
     # ANN
     model_ann = MLPRegressor(hidden_layer_sizes=(100,), max_iter=300, random_state=42)
     model_ann.fit(X_train_w2v, y)
     df_test[varlik + "_ann_w2v"] = [min(5, max(1, round(t))) for t in model_ann.predict(X_test_w2v)]
-    joblib.dump(model_ann, f"models/{varlik}_ann_w2v_model.pkl")
+    joblib.dump(model_ann, f"models/word2vec/{varlik}_ann_w2v_model.pkl")
     # ADA
     model_ada = AdaBoostRegressor(n_estimators=100, random_state=42)
     model_ada.fit(X_train_w2v, y)
     df_test[varlik + "_ada_w2v"] = [min(5, max(1, round(t))) for t in model_ada.predict(X_test_w2v)]
-    joblib.dump(model_ada, f"models/{varlik}_ada_w2v_model.pkl")
+    joblib.dump(model_ada, f"models/word2vec/{varlik}_ada_w2v_model.pkl")
 
 # 7b. Her varlık için model eğit ve tahmin et (GloVe)
 if glove_vectors is not None:
@@ -92,29 +92,29 @@ if glove_vectors is not None:
         model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
         model_rf.fit(X_train_glove, y)
         df_test[varlik + "_rf_glove"] = [min(5, max(1, round(t))) for t in model_rf.predict(X_test_glove)]
-        joblib.dump(model_rf, f"models/{varlik}_rf_glove_model.pkl")
+        joblib.dump(model_rf, f"models/glove/{varlik}_rf_glove_model.pkl")
         # SVM
         model_svm = SVR()
         model_svm.fit(X_train_glove, y)
         df_test[varlik + "_svm_glove"] = [min(5, max(1, round(t))) for t in model_svm.predict(X_test_glove)]
-        joblib.dump(model_svm, f"models/{varlik}_svm_glove_model.pkl")
+        joblib.dump(model_svm, f"models/glove/{varlik}_svm_glove_model.pkl")
         # ANN
         model_ann = MLPRegressor(hidden_layer_sizes=(100,), max_iter=300, random_state=42)
         model_ann.fit(X_train_glove, y)
         df_test[varlik + "_ann_glove"] = [min(5, max(1, round(t))) for t in model_ann.predict(X_test_glove)]
-        joblib.dump(model_ann, f"models/{varlik}_ann_glove_model.pkl")
+        joblib.dump(model_ann, f"models/glove/{varlik}_ann_glove_model.pkl")
         # ADA
         model_ada = AdaBoostRegressor(n_estimators=100, random_state=42)
         model_ada.fit(X_train_glove, y)
         df_test[varlik + "_ada_glove"] = [min(5, max(1, round(t))) for t in model_ada.predict(X_test_glove)]
-        joblib.dump(model_ada, f"models/{varlik}_ada_glove_model.pkl")
+        joblib.dump(model_ada, f"models/glove/{varlik}_ada_glove_model.pkl")
 
 # 8. Sonuçları kaydet
 df_test.to_excel("data/analiz_sonuclari2_tahminli_w2v.xlsx", index=False)
 if glove_vectors is not None:
     df_test.to_excel("data/analiz_sonuclari2_tahminli_glove.xlsx", index=False)
 if hasattr(w2v_model, 'save'):
-    w2v_model.save("models/word2vec_model.model")
+    w2v_model.save("models/word2vec/word2vec_model.model")
 print("Word2Vec ve (varsa) GloVe ile tahminler kaydedildi.")
 
 # --- Eğitim seti güncelleme işlemi overfitting nedeniyle durduruldu ---

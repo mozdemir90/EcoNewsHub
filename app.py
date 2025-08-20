@@ -39,8 +39,8 @@ except ImportError:
 
 # Tokenizer yükle (TensorFlow olsun ya da olmasın)
 try:
-    if os.path.exists("models/deep_learning/tokenizer.pkl"):
-        DL_TOKENIZER = joblib.load("models/deep_learning/tokenizer.pkl")
+    if os.path.exists("models/deeplearning/tokenizer.pkl"):
+        DL_TOKENIZER = joblib.load("models/deeplearning/tokenizer.pkl")
         print("✅ Deep Learning tokenizer yüklendi")
     else:
         DL_TOKENIZER = None
@@ -52,9 +52,9 @@ except Exception as e:
 # Modelleri yükle (sadece TensorFlow varsa)
 if TENSORFLOW_AVAILABLE:
     dl_model_files = {
-        'cnn': 'models/deep_learning/cnn_model.h5',
-        'lstm': 'models/deep_learning/lstm_model.h5',
-        'cnn_lstm': 'models/deep_learning/cnn_lstm_model.h5'
+        'cnn': 'models/deeplearning/cnn_model.h5',
+        'lstm': 'models/deeplearning/lstm_model.h5',
+        'cnn_lstm': 'models/deeplearning/cnn_lstm_model.h5'
     }
     
     for model_name, model_path in dl_model_files.items():
@@ -103,96 +103,96 @@ def load_model_safe(model_path):
 model_files = {
     "tfidf": {
         "rf": {
-            "Dolar": load_model_safe("models/dolar_skor_rf_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_rf_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_rf_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_rf_model.pkl"),
+            "Dolar": load_model_safe("models/tf-idf/dolar_skor_rf_model.pkl"),
+            "Altın": load_model_safe("models/tf-idf/altin_skor_rf_model.pkl"),
+            "Borsa": load_model_safe("models/tf-idf/borsa_skor_rf_model.pkl"),
+            "Bitcoin": load_model_safe("models/tf-idf/bitcoin_skor_rf_model.pkl"),
         },
         "ann": {
-            "Dolar": load_model_safe("models/dolar_skor_ann_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_ann_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_ann_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_ann_model.pkl"),
+            "Dolar": load_model_safe("models/tf-idf/dolar_skor_ann_model.pkl"),
+            "Altın": load_model_safe("models/tf-idf/altin_skor_ann_model.pkl"),
+            "Borsa": load_model_safe("models/tf-idf/borsa_skor_ann_model.pkl"),
+            "Bitcoin": load_model_safe("models/tf-idf/bitcoin_skor_ann_model.pkl"),
         },
         "svm": {
-            "Dolar": load_model_safe("models/dolar_skor_svm_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_svm_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_svm_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_svm_model.pkl"),
+            "Dolar": load_model_safe("models/tf-idf/dolar_skor_svm_model.pkl"),
+            "Altın": load_model_safe("models/tf-idf/altin_skor_svm_model.pkl"),
+            "Borsa": load_model_safe("models/tf-idf/borsa_skor_svm_model.pkl"),
+            "Bitcoin": load_model_safe("models/tf-idf/bitcoin_skor_svm_model.pkl"),
         },
         "nb": {
-            "Dolar": load_model_safe("models/dolar_skor_nb_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_nb_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_nb_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_nb_model.pkl"),
+            "Dolar": load_model_safe("models/tf-idf/dolar_skor_nb_model.pkl"),
+            "Altın": load_model_safe("models/tf-idf/altin_skor_nb_model.pkl"),
+            "Borsa": load_model_safe("models/tf-idf/borsa_skor_nb_model.pkl"),
+            "Bitcoin": load_model_safe("models/tf-idf/bitcoin_skor_nb_model.pkl"),
         },
         "ada": {
-            "Dolar": load_model_safe("models/dolar_skor_ada_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_ada_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_ada_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_ada_model.pkl"),
+            "Dolar": load_model_safe("models/tf-idf/dolar_skor_ada_model.pkl"),
+            "Altın": load_model_safe("models/tf-idf/altin_skor_ada_model.pkl"),
+            "Borsa": load_model_safe("models/tf-idf/borsa_skor_ada_model.pkl"),
+            "Bitcoin": load_model_safe("models/tf-idf/bitcoin_skor_ada_model.pkl"),
         }
     },
     "w2v": {
         "rf": {
-            "Dolar": load_model_safe("models/dolar_skor_rf_w2v_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_rf_w2v_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_rf_w2v_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_rf_w2v_model.pkl"),
+            "Dolar": load_model_safe("models/word2vec/dolar_skor_rf_w2v_model.pkl"),
+            "Altın": load_model_safe("models/word2vec/altin_skor_rf_w2v_model.pkl"),
+            "Borsa": load_model_safe("models/word2vec/borsa_skor_rf_w2v_model.pkl"),
+            "Bitcoin": load_model_safe("models/word2vec/bitcoin_skor_rf_w2v_model.pkl"),
         },
         "ann": {
-            "Dolar": load_model_safe("models/dolar_skor_ann_w2v_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_ann_w2v_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_ann_w2v_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_ann_w2v_model.pkl"),
+            "Dolar": load_model_safe("models/word2vec/dolar_skor_ann_w2v_model.pkl"),
+            "Altın": load_model_safe("models/word2vec/altin_skor_ann_w2v_model.pkl"),
+            "Borsa": load_model_safe("models/word2vec/borsa_skor_ann_w2v_model.pkl"),
+            "Bitcoin": load_model_safe("models/word2vec/bitcoin_skor_ann_w2v_model.pkl"),
         },
         "svm": {
-            "Dolar": load_model_safe("models/dolar_skor_svm_w2v_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_svm_w2v_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_svm_w2v_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_svm_w2v_model.pkl"),
+            "Dolar": load_model_safe("models/word2vec/dolar_skor_svm_w2v_model.pkl"),
+            "Altın": load_model_safe("models/word2vec/altin_skor_svm_w2v_model.pkl"),
+            "Borsa": load_model_safe("models/word2vec/borsa_skor_svm_w2v_model.pkl"),
+            "Bitcoin": load_model_safe("models/word2vec/bitcoin_skor_svm_w2v_model.pkl"),
         },
         "ada": {
-            "Dolar": load_model_safe("models/dolar_skor_ada_w2v_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_ada_w2v_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_ada_w2v_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_ada_w2v_model.pkl"),
+            "Dolar": load_model_safe("models/word2vec/dolar_skor_ada_w2v_model.pkl"),
+            "Altın": load_model_safe("models/word2vec/altin_skor_ada_w2v_model.pkl"),
+            "Borsa": load_model_safe("models/word2vec/borsa_skor_ada_w2v_model.pkl"),
+            "Bitcoin": load_model_safe("models/word2vec/bitcoin_skor_ada_w2v_model.pkl"),
         }
     },
     "glove": {
         "rf": {
-            "Dolar": load_model_safe("models/dolar_skor_rf_glove_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_rf_glove_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_rf_glove_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_rf_glove_model.pkl"),
+            "Dolar": load_model_safe("models/glove/dolar_skor_rf_glove_model.pkl"),
+            "Altın": load_model_safe("models/glove/altin_skor_rf_glove_model.pkl"),
+            "Borsa": load_model_safe("models/glove/borsa_skor_rf_glove_model.pkl"),
+            "Bitcoin": load_model_safe("models/glove/bitcoin_skor_rf_glove_model.pkl"),
         },
         "ann": {
-            "Dolar": load_model_safe("models/dolar_skor_ann_glove_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_ann_glove_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_ann_glove_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_ann_glove_model.pkl"),
+            "Dolar": load_model_safe("models/glove/dolar_skor_ann_glove_model.pkl"),
+            "Altın": load_model_safe("models/glove/altin_skor_ann_glove_model.pkl"),
+            "Borsa": load_model_safe("models/glove/borsa_skor_ann_glove_model.pkl"),
+            "Bitcoin": load_model_safe("models/glove/bitcoin_skor_ann_glove_model.pkl"),
         },
         "svm": {
-            "Dolar": load_model_safe("models/dolar_skor_svm_glove_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_svm_glove_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_svm_glove_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_svm_glove_model.pkl"),
+            "Dolar": load_model_safe("models/glove/dolar_skor_svm_glove_model.pkl"),
+            "Altın": load_model_safe("models/glove/altin_skor_svm_glove_model.pkl"),
+            "Borsa": load_model_safe("models/glove/borsa_skor_svm_glove_model.pkl"),
+            "Bitcoin": load_model_safe("models/glove/bitcoin_skor_svm_glove_model.pkl"),
         },
         "ada": {
-            "Dolar": load_model_safe("models/dolar_skor_ada_glove_model.pkl"),
-            "Altın": load_model_safe("models/altin_skor_ada_glove_model.pkl"),
-            "Borsa": load_model_safe("models/borsa_skor_ada_glove_model.pkl"),
-            "Bitcoin": load_model_safe("models/bitcoin_skor_ada_glove_model.pkl"),
+            "Dolar": load_model_safe("models/glove/dolar_skor_ada_glove_model.pkl"),
+            "Altın": load_model_safe("models/glove/altin_skor_ada_glove_model.pkl"),
+            "Borsa": load_model_safe("models/glove/borsa_skor_ada_glove_model.pkl"),
+            "Bitcoin": load_model_safe("models/glove/bitcoin_skor_ada_glove_model.pkl"),
         }
     }
 }
 
 # TF-IDF vektörizer
-vectorizer_tfidf = load_model_safe("models/tfidf_vectorizer.pkl")
+vectorizer_tfidf = load_model_safe("models/tf-idf/tfidf_vectorizer.pkl")
 # Word2Vec yükle
 try:
-    if os.path.exists("models/word2vec_model.model"):
-        w2v_model = Word2Vec.load("models/word2vec_model.model")
+    if os.path.exists("models/word2vec/word2vec_model.model"):
+        w2v_model = Word2Vec.load("models/word2vec/word2vec_model.model")
         print("✅ Word2Vec modeli yüklendi")
     else:
         w2v_model = None
@@ -354,8 +354,8 @@ def haber_ozetle(metin, dil='tr', max_cumle=2):
 @lru_cache(maxsize=1)
 def get_vectorizer_tfidf():
     try:
-        if os.path.exists("models/tfidf_vectorizer.pkl"):
-            return joblib.load("models/tfidf_vectorizer.pkl")
+        if os.path.exists("models/tf-idf/tfidf_vectorizer.pkl"):
+            return joblib.load("models/tf-idf/tfidf_vectorizer.pkl")
         else:
             print("⚠️ TF-IDF vectorizer dosyası bulunamadı")
             return None

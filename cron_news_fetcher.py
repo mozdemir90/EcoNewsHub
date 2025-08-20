@@ -11,24 +11,23 @@ from datetime import datetime
 import logging
 from telegram_bot import FinancialNewsBot
 
-# Configure logging
-import os
+# Create a separate logger for cron job
+cron_logger = logging.getLogger('cron_news_fetcher')
+cron_logger.setLevel(logging.INFO)
 
 # Ensure logs directory exists
 os.makedirs('logs', exist_ok=True)
 
-# Clear any existing handlers
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
+# Create file handler for cron job
+file_handler = logging.FileHandler('logs/cron_news.log', mode='a', encoding='utf-8')
+file_handler.setLevel(logging.INFO)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/cron_news.log', mode='a', encoding='utf-8'),
-        logging.StreamHandler()
-    ]
-)
+# Create formatter
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Add handler to logger (only file handler, no console handler)
+cron_logger.addHandler(file_handler)
 
 def load_config():
     """Load configuration from config file"""
@@ -37,20 +36,20 @@ def load_config():
             config = json.load(f)
         return config
     except FileNotFoundError:
-        logging.error("❌ bot_config.json not found")
+        cron_logger.error("❌ bot_config.json not found")
         return None
     except json.JSONDecodeError:
-        logging.error("❌ Invalid JSON in bot_config.json")
+        cron_logger.error("❌ Invalid JSON in bot_config.json")
         return None
 
 def main():
     """Main function for cron job"""
-    logging.info("🚀 Starting cron news fetcher...")
+    cron_logger.info("🚀 Starting cron news fetcher...")
     
     # Load configuration
     config = load_config()
     if not config:
-        logging.error("❌ Failed to load configuration")
+        cron_logger.error("❌ Failed to load configuration")
         sys.exit(1)
     
     # Get bot token and chat ID
@@ -58,11 +57,11 @@ def main():
     chat_id = config.get('chat_id') or os.getenv('TELEGRAM_CHAT_ID')
     
     if not bot_token:
-        logging.error("❌ Bot token not found")
+        cron_logger.error("❌ Bot token not found")
         sys.exit(1)
     
     if not chat_id:
-        logging.error("❌ Chat ID not found")
+        cron_logger.error("❌ Chat ID not found")
         sys.exit(1)
     
     try:
@@ -72,10 +71,10 @@ def main():
         # Process news once
         bot.process_news_batch(chat_id)
         
-        logging.info("✅ Cron job completed successfully")
+        cron_logger.info("✅ Cron job completed successfully")
         
     except Exception as e:
-        logging.error(f"❌ Cron job failed: {e}")
+        cron_logger.error(f"❌ Cron job failed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 {
-    "bot_token": "7599491092:AAFJz1K9GPGwY_DugwDNtRIzaEe6E6vZzD0",
+   "bot_token": "8242759784:AAGFSAHGRlVFDtqVjlSgSRJYmLJT7DINW0c",
     "chat_id": "1660853466",
-    "check_interval_minutes": 30,
+    "check_interval_minutes": 15,
     "news_sources": ["CNBC", "BloombergHT"],
     "assets": ["USD", "Gold", "Stock Market", "Bitcoin"],
     "model_type": "rf",
