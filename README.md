@@ -1,14 +1,15 @@
-# Financial News Sentiment Analysis & Prediction System
+# Financial News Impact Analysis & Prediction System
 
-A comprehensive machine learning system that analyzes financial news and predicts their impact on financial assets (USD, Gold, Stock Market, Bitcoin) using multiple NLP and ML approaches. Features include automated news fetching, Telegram bot integration, and organized model management.
+A comprehensive machine learning system that analyzes financial news and predicts their impact on financial assets (USD, Gold, Stock Market, Bitcoin) using multiple NLP and ML approaches. The system supports both Turkish and English financial news analysis. Features include automated news fetching, Telegram bot integration, and organized model management.
 
 ## 🚀 Features
 
 ### 🤖 Interactive Telegram Bot
-- **Real-time news analysis** via Telegram
+- **Real-time financial impact analysis** via Telegram
 - **Interactive scoring** for training data collection
 - **Automated news fetching** every 10 minutes
 - **Multi-model predictions** with color-coded results
+- **Multi-language support** (Turkish & English)
 
 ### 📊 Supervised Learning Models
 - **TF-IDF + Regression Models** (Best Performance)
@@ -136,7 +137,7 @@ python telegram_interactive_bot.py
 ```
 
 **Commands:**
-- Send any text message for sentiment analysis
+- Send any text message for financial impact analysis
 - `/help` or `/yardim` - Show usage instructions
 - `/ekle <text> | dolar:3 altin:4 borsa:2 bitcoin:5` - Add training data
 - `/ekle_interactive <text>` - Interactive scoring mode
@@ -187,7 +188,7 @@ This script generates:
 
 ### Telegram Bot
 1. Send news text to the bot
-2. Receive instant sentiment analysis
+2. Receive instant financial impact analysis
 3. Use interactive commands for training data
 
 ## 📝 Scoring System
@@ -201,6 +202,7 @@ This script generates:
 ## 🎯 Key Features
 
 - **Multi-source news scraping** from financial websites
+- **Multi-language support** (Turkish & English news analysis)
 - **Multi-model approach** for robust predictions
 - **Real-time web interface** for easy interaction
 - **Interactive Telegram bot** for mobile access
@@ -212,12 +214,17 @@ This script generates:
 ## 🔬 Technical Details
 
 ### Data Sources
-- Bloomberg HT
-- CNN Business
-- BBC News
-- Anadolu Agency
-- Hürriyet Daily News
-- And more...
+- **Turkish Sources:**
+  - Bloomberg HT
+  - Anadolu Agency
+  - Hürriyet Daily News
+  - Milliyet Ekonomi
+- **English Sources:**
+  - CNN Business
+  - BBC News
+  - Reuters Business
+  - Bloomberg News
+- **Multi-language Support:** The system can analyze news in both Turkish and English languages
 
 ### Technologies Used
 - **Backend:** Python, Flask
@@ -252,7 +259,7 @@ Convert the prediction functionality into a REST API for integration with other 
 - **Fixed model loading** issues across all applications
 
 ### ✅ Telegram Bot Improvements
-- **Interactive bot** with real-time sentiment analysis
+- **Interactive bot** with real-time financial impact analysis
 - **Automated news fetcher** with cron job integration
 - **Color-coded results** for better user experience
 - **Training data collection** via Telegram commands
