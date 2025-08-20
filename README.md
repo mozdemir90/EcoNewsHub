@@ -85,7 +85,7 @@ newsFetch/
 │   └── user_actions.log         # User activity logs
 └── templates/                     # Web interface
     ├── index.html
-    └── ekle.html
+    └── add.html
 ```
 
 ## 🛠️ Installation

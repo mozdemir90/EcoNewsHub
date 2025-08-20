@@ -476,7 +476,7 @@ def ekle():
                 if haber_norm in existing_norms:
                     mesaj = "Bu haber zaten eğitim setinde mevcut!"
                     skorlar = kullanici_skor
-                    return render_template("ekle.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
+                    return render_template("add.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
             # Haber metnini temizle
             haber_temizlenmis = haber_temizle(haber)
             # Haber özetini çıkar
@@ -521,7 +521,7 @@ def ekle():
                 }
             # Log tahmin işlemi (ekle sayfasında)
             log_user_action(request.remote_addr, "tahmin_ekle", haber, skorlar, secili_model)
-    return render_template("ekle.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
+            return render_template("add.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)
