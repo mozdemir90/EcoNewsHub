@@ -292,7 +292,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **GitHub:** [@mozdemir90](https://github.com/mozdemir90)
 - **LinkedIn:** [muammer özdemir](https://linkedin.com/in/muammer-özdemir-05629933)
-- **Email:** your.email@example.com
+- **Email:** muammerozdemir0@gmail.com
 
 ## 🙏 Acknowledgments
 
