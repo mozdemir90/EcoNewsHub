@@ -12,7 +12,7 @@ A comprehensive machine learning system that analyzes financial news and predict
 - **Multi-language support** (Turkish & English)
 
 ### 📊 Supervised Learning Models
-- **TF-IDF + Regression Models** (Best Performance)
+- **TF-IDF + Regression Models**
   - Random Forest
   - Support Vector Machine (SVM)
   - Artificial Neural Network (ANN)
@@ -38,18 +38,15 @@ A comprehensive machine learning system that analyzes financial news and predict
 
 ## 📊 Model Performance Comparison
 
-| Model | Average R² Score | Best Asset | Performance |
-|-------|------------------|------------|-------------|
-| **TF-IDF** | -0.1724 | Bitcoin (R² = 0.1745) | ⭐ Best Overall |
-| **GloVe** | -0.1782 | Gold/BIST100 | Good Performance |
-| **Word2Vec** | -0.8371 | Dollar | Moderate Performance |
-| **Deep Learning** | -13.1799 | Needs improvement | 🔧 Under Development |
+| Model | Relative Performance (latest) | Notes |
+|-------|-------------------------------|-------|
+| **Deep Learning** | ⭐ Best Overall | En düşük MSE/MAE, R² sıfıra en yakın |
+| **GloVe + RF** | İyi | Telegram bot varsayılanı |
+| **TF-IDF** | Orta | Dengeli, hızlı |
+| **Word2Vec** | Zayıf | Diğerlerinin gerisinde |
 
-### 🏆 Best Performance by Asset:
-- **Bitcoin**: TF-IDF (R² = 0.1745) - **Positive Score!**
-- **Dollar**: Word2Vec (R² = -0.3599)
-- **Gold**: GloVe (R² = -0.0304)
-- **BIST100**: GloVe (R² = -0.0650)
+### 🏆 Notes by Asset (son karşılaştırma)
+- Bitcoin, Dolar, Altın, Borsa: DL genel olarak en iyi/istikrarlı sonuçlar verdi.
 
 ## 📁 Project Structure
 
@@ -69,7 +66,7 @@ newsFetch/
 ├── requirements.txt                # Required libraries
 ├── bot_config.json                 # Telegram bot configuration
 ├── data/                          # Data files
-│   ├── training_data2.xlsx        # Training data (genişletilmiş)
+│   ├── training_data4.xlsx        # Training data (temizlenmiş/standart)
 │   ├── training_data_telegram.json # Telegram training data
 │   ├── analiz_sonuclari2.xlsx    # Test data
 │   └── model_comparison.xlsx     # Model comparison results
@@ -169,6 +166,7 @@ This script generates:
 - **Model Options:**
   - TF-IDF, Word2Vec, GloVe (Supervised Learning)
   - Deep Learning (CNN, LSTM, CNN+LSTM)
+  - Hybrid (DL + ML ağırlıklı kombinasyon)
 
 ## 📈 Performance Metrics
 
@@ -251,12 +249,13 @@ Convert the prediction functionality into a REST API for integration with other 
 - **Heroku:** Reliable hosting for Telegram bots
 - **VPS:** Full control over the environment
 
-## 📋 Recent Updates (August 2025)
+## 📋 Recent Updates (September 2025)
 
-### ✅ Model Organization
+### ✅ Data & Models
 - **Reorganized models** into dedicated directories (tf-idf/, word2vec/, glove/, deeplearning/)
-- **Updated all paths** in training and prediction scripts
-- **Fixed model loading** issues across all applications
+- **Updated training dataset to `data/training_data4.xlsx`** (temizlik, dil düzeltmesi, duplikasyon ayıklama)
+- **Deep Learning yuvarlama mantığı** 3'e çökme etkisini azaltacak şekilde iyileştirildi
+- **Telegram bot** varsayılanı GloVe + Random Forest olacak şekilde güncellendi
 
 ### ✅ Telegram Bot Improvements
 - **Interactive bot** with real-time financial impact analysis
@@ -264,11 +263,10 @@ Convert the prediction functionality into a REST API for integration with other 
 - **Color-coded results** for better user experience
 - **Training data collection** via Telegram commands
 
-### ✅ Performance Optimizations
-- **Switched to TF-IDF models** for better prediction accuracy
-- **Fixed duplicate detection** in news fetching
-- **Improved error handling** and logging
-- **Enhanced user interface** with better feedback
+### ✅ UI Refresh
+- **Header/tema renkleri** güncellendi, skor kutuları yeniden tasarlandı
+- **Dropdown odak/degisim vurgusu**, haber kutusu kenar yumuşatma ve gölge
+- **Tahmin sonrası sayfa kaydırma** kaldırıldı; skor alanı görünümde kalır
 
 ### ✅ System Monitoring
 - **Comprehensive logging** for all components
