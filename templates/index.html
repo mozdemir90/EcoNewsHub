@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <title>Haber Skor Tahmini</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-3hQm6r3w2P3m8e4bYQm2q1mC7z4S1y5nqJxk3t8k0qG7mAqQk7m8qN2jQm+3n9JX9z7g3y5x2x7q9p6r0w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f4f7fa; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #F5F7FA; }
         .navbar {
-            background: #27ae60;
+            background: #1F2937;
             color: #fff;
             padding: 18px 0 12px 0;
             text-align: center;
@@ -34,19 +35,20 @@
             margin: 40px auto 30px auto;
             box-shadow: 0 4px 24px #b0b8c1;
         }
-        h2 { color: #2c3e50; margin-top: 0; }
+        h2 { color: #34495E; margin-top: 0; }
         textarea {
             width: 100%;
             height: 120px;
             font-size: 1.1em;
             border-radius: 6px;
-            border: 1px solid #b0b8c1;
+            border: 1px solid #CED4DA;
             padding: 10px;
             margin-bottom: 18px;
             resize: vertical;
+            box-shadow: 0 1px 3px #E5E7EB;
         }
         .btn {
-            background: #e74c3c;
+            background: #3B82F6;
             color: #fff;
             border: none;
             padding: 12px 32px;
@@ -58,7 +60,7 @@
             display: block;
             margin: 0;
         }
-        .btn:hover { background: #b93222; }
+        .btn:hover { background: #2563EB; }
         .form-row {
             display: flex;
             justify-content: center;
@@ -69,10 +71,20 @@
         select {
             padding: 10px 18px;
             border-radius: 5px;
-            border: 1px solid #b0b8c1;
+            border: 1px solid #CED4DA;
             font-size: 1.05em;
             background: #f7f7f7;
             color: #2c3e50;
+        }
+        /* Seçim vurgusu (ince çizgi) */
+        .form-select:focus {
+            outline: none;
+            border-color: #20C997;
+            box-shadow: 0 0 0 2px rgba(32, 201, 151, 0.2);
+        }
+        .form-select.changed {
+            border-color: #20C997;
+            box-shadow: 0 0 0 2px rgba(32, 201, 151, 0.2);
         }
         .skorlar {
             margin-top: 32px;
@@ -83,7 +95,7 @@
             align-items: stretch;
         }
         .skor-kutu {
-            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            background: #E0F2FE;
             border-radius: 12px;
             box-shadow: 0 2px 8px #d0d8e0;
             padding: 26px 36px 20px 36px;
@@ -97,19 +109,24 @@
             align-items: center;
             justify-content: center;
         }
+        .skor-kutu:hover { background: #BAE6FD; }
         .skor-kutu span {
             display: flex;
             align-items: center;
             font-size: 1.18em;
             margin-bottom: 8px;
-            color: #2980b9;
             font-weight: 600;
             gap: 7px;
         }
+        /* Başlık renkleri */
+        .dolar-baslik { color: #7c8288; }  /* Siyah - Dolar için */
+        .altin-baslik { color: #7c8288; }  /* Siyah - Altın için */
+        .borsa-baslik { color: #7c8288; }  /* Siyah - Borsa için */
+        .bitcoin-baslik { color: #7c8288; }  /* Siyah - Bitcoin için */
         .aciklama {
             margin-top: 36px;
-            background: #f0f4f8;
-            border-left: 5px solid #2980b9;
+            background: #D4EDDA;
+            border-left: 5px solid #20C997;
             padding: 18px 22px;
             border-radius: 7px;
             color: #2c3e50;
@@ -123,6 +140,24 @@
             color: #444;
             font-size: 1em;
         }
+        .uyari-mesaji {
+            margin-top: 20px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 7px;
+            padding: 15px 20px;
+            color: #856404;
+            font-size: 1em;
+            font-weight: 500;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        /* Skor renkleri - 1-5 aralığı (Negatif: kırmızı, Nötr: sarı, Pozitif: yeşil) */
+        .skor-1 { color: #DC2626 !important; font-weight: bold; font-size: 1.3em; }
+        .skor-2 { color: #DC2626 !important; font-weight: bold; font-size: 1.3em; }
+        .skor-3 { color: #FBBF24 !important; font-weight: bold; font-size: 1.3em; }
+        .skor-4 { color: #16A34A !important; font-weight: bold; font-size: 1.3em; }
+        .skor-5 { color: #16A34A !important; font-weight: bold; font-size: 1.3em; }
         /* .header-ikon {
             font-size: 1.5em;
             margin: 0 10px;
@@ -158,11 +193,12 @@
                 <div>
                     <label for="yontem" style="margin-right: 4px;">Yöntem:</label>
                     <select name="yontem" id="yontem" class="form-select" style="min-width: 120px; display: inline-block;" onchange="updateModelOptions()">
-                        <option value="tfidf" {% if secili_yontem == 'tfidf' %}selected{% endif %}>TF-IDF</option>
+                        <option value="tfidf" {% if secili_yontem == 'tfidf' or not secili_yontem %}selected{% endif %}>TF-IDF</option>
                         <option value="w2v" {% if secili_yontem == 'w2v' %}selected{% endif %}>Word2Vec</option>
                         <option value="glove" {% if secili_yontem == 'glove' %}selected{% endif %}>GloVe</option>
                         <option value="deep_learning" {% if secili_yontem == 'deep_learning' %}selected{% endif %}>Deep Learning</option>
 
+                        <option value="hybrid" {% if secili_yontem == 'hybrid' %}selected{% endif %}>Hibrit (DL+ML)</option>
                     </select>
                 </div>
                 <div id="supervised_model_div">
@@ -172,9 +208,21 @@
                 <div id="dl_model_div" style="display: none;">
                     <label for="dl_model" style="margin-right: 4px;">DL Model:</label>
                     <select name="dl_model" id="dl_model" class="form-select" style="min-width: 140px; display: inline-block;">
-                        <option value="cnn" {% if secili_dl_model == 'cnn' %}selected{% endif %}>1D CNN</option>
+                        <option value="cnn" {% if secili_dl_model == 'cnn' or not secili_dl_model %}selected{% endif %}>1D CNN</option>
                         <option value="lstm" {% if secili_dl_model == 'lstm' %}selected{% endif %}>LSTM</option>
                         <option value="cnn_lstm" {% if secili_dl_model == 'cnn_lstm' %}selected{% endif %}>CNN+LSTM</option>
+                    </select>
+                </div>
+                <div id="hybrid_div" style="display: none;">
+                    <label for="hybrid_weights" style="margin-right: 4px;">DL Ağırlığı:</label>
+                    <select name="hybrid_weights" id="hybrid_weights" class="form-select" style="min-width: 140px; display: inline-block;">
+                        <option value="0.8,0.2" {% if request.form.get('hybrid_weights') == '0.8,0.2' %}selected{% endif %}>%80 DL, %20 ML</option>
+                        <option value="0.7,0.3" {% if request.form.get('hybrid_weights') == '0.7,0.3' %}selected{% endif %}>%70 DL, %30 ML</option>
+                        <option value="0.6,0.4" {% if request.form.get('hybrid_weights') == '0.6,0.4' %}selected{% endif %}>%60 DL, %40 ML</option>
+                        <option value="0.5,0.5" {% if request.form.get('hybrid_weights') == '0.5,0.5' %}selected{% endif %}>%50 DL, %50 ML</option>
+                        <option value="0.4,0.6" {% if request.form.get('hybrid_weights') == '0.4,0.6' or not request.form.get('hybrid_weights') %}selected{% endif %}>%40 DL, %60 ML</option>
+                        <option value="0.3,0.7" {% if request.form.get('hybrid_weights') == '0.3,0.7' %}selected{% endif %}>%30 DL, %70 ML</option>
+                        <option value="0.2,0.8" {% if request.form.get('hybrid_weights') == '0.2,0.8' %}selected{% endif %}>%20 DL, %80 ML</option>
                     </select>
                 </div>
                 <button class="btn btn-success" type="submit" style="min-width: 120px;">Tahmin Et</button>
@@ -184,15 +232,23 @@
                 const yontem = document.getElementById('yontem').value;
                 const supervisedDiv = document.getElementById('supervised_model_div');
                 const dlDiv = document.getElementById('dl_model_div');
+                const hybridDiv = document.getElementById('hybrid_div');
                 const modelSelect = document.getElementById('model');
 
                 if (yontem === 'deep_learning') {
                     supervisedDiv.style.display = 'none';
                     dlDiv.style.display = 'block';
+                    hybridDiv.style.display = 'none';
                     return;
+
+                } else if (yontem === 'hybrid') {
+                    supervisedDiv.style.display = 'block';
+                    dlDiv.style.display = 'block';
+                    hybridDiv.style.display = 'block';
                 } else {
                     supervisedDiv.style.display = 'block';
                     dlDiv.style.display = 'none';
+                    hybridDiv.style.display = 'none';
                 }
 
                 // Modelleri yönteme göre hazırla
@@ -225,26 +281,49 @@
                     const opt = document.createElement('option');
                     opt.value = m.val;
                     opt.text = m.text;
-                    if (m.val === seciliModel) opt.selected = true;
+                    if (m.val === seciliModel || (!seciliModel && m.val === 'rf')) opt.selected = true;
                     modelSelect.appendChild(opt);
                 });
             }
 
             // Sayfa yüklendiğinde ve yöntem değiştiğinde çalıştır
-            document.addEventListener('DOMContentLoaded', updateModelOptions);
+            document.addEventListener('DOMContentLoaded', function() {
+                updateModelOptions();
+                // Değişiklik olduğunda ince çizgi ile belirt
+                const selects = [
+                    document.getElementById('yontem'),
+                    document.getElementById('model'),
+                    document.getElementById('dl_model'),
+                    document.getElementById('hybrid_weights')
+                ];
+                selects.forEach(function(sel) {
+                    if (sel) {
+                        sel.classList.add('form-select');
+                        sel.addEventListener('change', function() {
+                            sel.classList.add('changed');
+                        });
+                    }
+                });
+            });
             </script>
         </form>
-        {% if skorlar %}
-        <div class="skorlar">
-            <div class="skor-kutu"><span>💵 Dolar</span> {{ skorlar['Dolar'] }}</div>
-            <div class="skor-kutu"><span>🪙 Altın</span> {{ skorlar['Altın'] }}</div>
-            <div class="skor-kutu"><span>📈 Borsa</span> {{ skorlar['Borsa'] }}</div>
-            <div class="skor-kutu"><span>₿ Bitcoin</span> {{ skorlar['Bitcoin'] }}</div>
+        {% if uyari_mesaji %}
+        <div class="uyari-mesaji">
+            {{ uyari_mesaji }}
         </div>
+        {% endif %}
+        {% if skorlar %}
+        <div class="skorlar" id="skorlar">
+            <div class="skor-kutu"><span class="dolar-baslik"><i class="fa-solid fa-dollar-sign" aria-hidden="true"></i> Dolar</span> <span class="skor-{{ skorlar['Dolar'] }}">{{ skorlar['Dolar'] }}</span></div>
+            <div class="skor-kutu"><span class="altin-baslik"><i class="fa-solid fa-coins" aria-hidden="true"></i> Altın</span> <span class="skor-{{ skorlar['Altın'] }}">{{ skorlar['Altın'] }}</span></div>
+            <div class="skor-kutu"><span class="borsa-baslik"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Borsa</span> <span class="skor-{{ skorlar['Borsa'] }}">{{ skorlar['Borsa'] }}</span></div>
+            <div class="skor-kutu"><span class="bitcoin-baslik"><i class="fa-brands fa-bitcoin" aria-hidden="true"></i> Bitcoin</span> <span class="skor-{{ skorlar['Bitcoin'] }}">{{ skorlar['Bitcoin'] }}</span></div>
+        </div>
+        
         {% endif %}
         <div class="aciklama" id="aciklama">
             <b>Nasıl çalışır?</b><br>
-            Bu arayüz, girdiğiniz haber metninin finansal varlıklar (Dolar, Altın, Borsa, Bitcoin) üzerindeki etkisini 0-5 arası bir skorla tahmin eder.<br>
+            Bu arayüz, girdiğiniz haber metninin finansal varlıklar (Dolar, Altın, Borsa, Bitcoin) üzerindeki etkisini 1-5 arası bir skorla tahmin eder.<br>
             <ul>
                 <li>1: Güçlü Düşüş etkisi</li>
                 <li>2: Hafif Düşüş etkisi</li>

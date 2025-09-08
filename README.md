@@ -69,7 +69,7 @@ newsFetch/
 ├── requirements.txt                # Required libraries
 ├── bot_config.json                 # Telegram bot configuration
 ├── data/                          # Data files
-│   ├── training_data.xlsx         # Training data
+│   ├── training_data2.xlsx        # Training data (genişletilmiş)
 │   ├── training_data_telegram.json # Telegram training data
 │   ├── analiz_sonuclari2.xlsx    # Test data
 │   └── model_comparison.xlsx     # Model comparison results

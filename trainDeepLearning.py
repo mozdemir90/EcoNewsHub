@@ -31,7 +31,7 @@ class DeepLearningTrainer:
     def load_data(self):
         """Eğitim verisini yükle"""
         print("📥 Veri yükleniyor...")
-        self.df_train = pd.read_excel("data/training_data.xlsx")
+        self.df_train = pd.read_excel("data/training_data4.xlsx")
         self.df_test = pd.read_excel("data/analiz_sonuclari2.xlsx")
         
         # Boş değerleri temizle
@@ -243,13 +243,14 @@ class DeepLearningTrainer:
         # MSE loss
         mse_loss = tf.keras.backend.mean(tf.keras.backend.square(y_true - y_pred))
         
-        # Skor aralığına göre penalty (0 ve 5 skorlarına daha fazla önem ver)
+        # Skor aralığına göre penalty (tüm skorlara eşit önem ver)
+        # 0, 1, 2, 3, 4, 5 skorlarına daha fazla önem ver
         score_penalty = tf.keras.backend.mean(
             tf.keras.backend.square(y_true - y_pred) * 
-            tf.keras.backend.square(y_true - 2.5)  # 2.5'ten uzak olan skorlara daha fazla penalty
+            (1.0 + 0.5 * tf.keras.backend.abs(y_true - 2.5))  # Orta değerlerden uzak olanlara daha fazla penalty
         )
         
-        return mse_loss + 0.1 * score_penalty
+        return mse_loss + 0.05 * score_penalty
     
     def evaluate_model(self, model, model_name):
         """Model performansını değerlendir"""
@@ -268,17 +269,16 @@ class DeepLearningTrainer:
         print(f"MAE: {mae:.4f}")
         print(f"R²: {r2:.4f}")
         
-        # Test setine tahminleri ekle - daha agresif yuvarlama
+        # Test setine tahminleri ekle - 1-5 aralığı yuvarlama
         varliklar = ['dolar_skor', 'altin_skor', 'borsa_skor', 'bitcoin_skor']
         for i, varlik in enumerate(varliklar):
-            # Daha agresif yuvarlama - 5 skorunu da dahil et
-            pred = np.clip(y_pred[:, i], 0, 5) # Clip first
-            rounded_preds = np.zeros_like(pred)
-            rounded_preds[pred < 1.5] = 0
-            rounded_preds[(pred >= 1.5) & (pred < 2.5)] = 1
-            rounded_preds[(pred >= 2.5) & (pred < 3.5)] = 2
-            rounded_preds[(pred >= 3.5) & (pred < 4.5)] = 3
-            rounded_preds[pred >= 4.5] = 5  # 4.5+ değerler 5'e yuvarlanmalı
+            # 1-5 aralığı yuvarlama
+            pred = np.clip(y_pred[:, i], 1, 5) # Clip to 1-5 range
+            rounded_preds = np.ones_like(pred)  # Start with 1s
+            rounded_preds[(pred >= 1.5) & (pred < 2.5)] = 2
+            rounded_preds[(pred >= 2.5) & (pred < 3.5)] = 3
+            rounded_preds[(pred >= 3.5) & (pred < 4.5)] = 4
+            rounded_preds[pred >= 4.5] = 5
             self.df_test[f'{varlik}_{model_name}'] = rounded_preds
         
         return mse, mae, r2

@@ -26,44 +26,54 @@ class InteractiveNewsBot:
     def __init__(self, bot_token):
         self.bot_token = bot_token
         self.base_url = f"https://api.telegram.org/bot{bot_token}"
-        self.models = {}
-        self.vectorizer = None
         self.last_update_id = 0
         
         # User states for interactive scoring
         self.user_states = {}  # {chat_id: {'state': 'waiting_for_scores', 'news_text': '...', 'scores': {}}}
         
-        # Load models
+        # Model holders
+        self.glove_vectors = None
+        self.models = {}
+        
+        # Load GloVe + RF models
         self.load_models()
     
     def load_models(self):
-        """Load sentiment analysis models"""
+        """Load GloVe embeddings and RF models for each asset"""
         try:
-            logging.info("🔄 Loading models...")
+            logging.info("🔄 Loading GloVe + Random Forest models...")
             
-            # Load TF-IDF vectorizer
-            tfidf_path = 'models/tf-idf/tfidf_vectorizer.pkl'
-            if os.path.exists(tfidf_path):
-                self.vectorizer = joblib.load(tfidf_path)
-                logging.info("✅ TF-IDF vectorizer loaded")
+            # Load GloVe vectors
+            from gensim.models import KeyedVectors
+            glove_path = 'data/glove.6B.100d.txt'
+            if os.path.exists(glove_path):
+                from datetime import datetime as _dt
+                logging.info("📥 Loading GloVe vectors... this may take a while")
+                self.glove_vectors = KeyedVectors.load_word2vec_format(glove_path, binary=False, no_header=True)
+                logging.info("✅ GloVe vectors loaded")
             else:
-                logging.error("❌ TF-IDF vectorizer not found")
+                logging.error(f"❌ GloVe file not found: {glove_path}")
                 return
             
-            # Load TF-IDF RF models for each asset (better performance)
+            # Load RF models for each asset (trained on GloVe features)
+            import joblib
             assets = ['dolar', 'altin', 'borsa', 'bitcoin']
+            loaded = []
             for asset in assets:
-                model_path = f'models/tf-idf/{asset}_skor_rf_model.pkl'
+                model_path = f'models/glove/{asset}_skor_rf_glove_model.pkl'
                 if os.path.exists(model_path):
                     self.models[asset] = joblib.load(model_path)
-                    logging.info(f"✅ {asset} TF-IDF RF model loaded")
+                    loaded.append(asset)
                 else:
-                    logging.warning(f"⚠️ {asset} TF-IDF RF model not found")
-            
-            logging.info("✅ All TF-IDF RF models loaded successfully")
+                    logging.warning(f"⚠️ RF model not found for {asset}: {model_path}")
+            if loaded:
+                logging.info(f"✅ Loaded RF models for assets: {loaded}")
+            else:
+                logging.error("❌ No RF models loaded. Aborting.")
+                return
             
         except Exception as e:
-            logging.error(f"❌ Error loading models: {e}")
+            logging.error(f"❌ Error loading GloVe/RF models: {e}")
     
     def preprocess_text(self, text):
         """Preprocess text for sentiment analysis"""
@@ -78,54 +88,46 @@ class InteractiveNewsBot:
         return text
     
     def predict_sentiment(self, text):
-        """Predict sentiment for given text using TF-IDF"""
+        """Predict sentiment using GloVe average embeddings + RF models"""
         try:
-            logging.info(f"🔍 Starting prediction for text: {text[:50]}...")
+            logging.info(f"🔍 Starting GloVe+RF prediction for text: {text[:50]}...")
             
-            if not hasattr(self, 'vectorizer') or not self.models:
+            if self.glove_vectors is None or not self.models:
                 logging.error("❌ Models not loaded")
                 return None
             
-            # Preprocess text
+            # Preprocess
             processed_text = self.preprocess_text(text)
             if not processed_text:
                 logging.error("❌ Text preprocessing failed")
                 return None
             
-            logging.info(f"✅ Text preprocessed: {processed_text[:50]}...")
+            tokens = processed_text.split()
+            # Average GloVe vector
+            import numpy as np
+            vectors = [self.glove_vectors[word] for word in tokens if word in self.glove_vectors]
+            if vectors:
+                X = np.mean(vectors, axis=0).reshape(1, -1)
+            else:
+                X = np.zeros((1, self.glove_vectors.vector_size))
             
-            # Get TF-IDF features
-            X = self.vectorizer.transform([processed_text])
-            logging.info(f"✅ TF-IDF features shape: {X.shape}")
-            
-            # Get predictions for each asset
+            # Predict per asset
             predictions = {}
-            asset_names = {
-                'dolar': 'USD',
-                'altin': 'Gold', 
-                'borsa': 'Stock Market',
-                'bitcoin': 'Bitcoin'
-            }
+            name_map = {'dolar': 'USD', 'altin': 'Gold', 'borsa': 'Stock Market', 'bitcoin': 'Bitcoin'}
+            for asset, model in self.models.items():
+                try:
+                    pred = model.predict(X)[0]
+                    pred = int(min(5, max(1, round(pred))))
+                    predictions[name_map[asset]] = pred
+                    logging.info(f"✅ {asset} GloVe+RF prediction: {pred}")
+                except Exception as e:
+                    logging.error(f"❌ Error predicting {asset}: {e}")
+                    predictions[name_map[asset]] = 3
             
-            for asset in ['dolar', 'altin', 'borsa', 'bitcoin']:
-                if asset in self.models:
-                    try:
-                        pred = self.models[asset].predict(X)[0]
-                        pred = min(5, max(1, round(pred)))  # Ensure 1-5 range
-                        predictions[asset_names[asset]] = pred
-                        logging.info(f"✅ {asset} prediction: {pred}")
-                    except Exception as e:
-                        logging.error(f"❌ Error predicting {asset}: {e}")
-                        predictions[asset_names[asset]] = 3  # Default to neutral
-                else:
-                    logging.warning(f"⚠️ Model not found for {asset}")
-                    predictions[asset_names[asset]] = 3  # Default to neutral
-            
-            logging.info(f"✅ Final predictions: {predictions}")
+            logging.info(f"✅ Final GloVe+RF predictions: {predictions}")
             return predictions
-            
         except Exception as e:
-            logging.error(f"❌ Prediction error: {e}")
+            logging.error(f"❌ GloVe+RF prediction error: {e}")
             return None
     
     def get_glove_embeddings(self, text):
@@ -216,7 +218,7 @@ class InteractiveNewsBot:
 🎯 **Scores:**
 {pred_text}
 
-🤖 **Model:** TF-IDF + Random Forest
+🤖 **Model:** GloVe + Random Forest
 ⏰ **Analyzed at:** {datetime.now().strftime('%H:%M:%S')}
             """.strip()
             
@@ -303,7 +305,7 @@ class InteractiveNewsBot:
                 self.start_interactive_scoring(chat_id, text, user_name)
                 return
             
-            # Get sentiment prediction
+            # Get sentiment prediction (GloVe + RF)
             predictions = self.predict_sentiment(text)
             
             if predictions:
@@ -674,25 +676,49 @@ Sonrasında her varlık için ayrı ayrı skor girmeniz istenecek:
             logging.error(f"❌ Error saving interactive data: {e}")
             self.send_message(chat_id, "❌ Veri kaydedilirken hata oluştu")
     
+    def detect_language(self, text):
+        """Detect language based on Turkish characters"""
+        if not text:
+            return 'tr'  # Default to Turkish
+        
+        text = str(text)
+        # Turkish specific characters
+        turkish_chars = set('çğıöşüÇĞIÖŞÜ')
+        
+        # Count Turkish characters
+        turkish_count = sum(1 for char in text if char in turkish_chars)
+        total_chars = len([c for c in text if c.isalpha()])
+        
+        if total_chars == 0:
+            return 'tr'  # Default if no alphabetic characters
+        
+        # If more than 5% Turkish characters, consider it Turkish
+        if turkish_count / total_chars > 0.05:
+            return 'tr'
+        else:
+            return 'en'
+
     def add_to_excel_dataset(self, news_text, scores, user_name):
         """Add news to Excel training dataset"""
         try:
             import pandas as pd
             from openpyxl import load_workbook
             
-            excel_file = 'data/training_data.xlsx'
+            excel_file = 'data/training_data4.xlsx'
             
-            # Create new entry with all required fields
+            # Detect language
+            detected_language = self.detect_language(news_text)
+            
+            # Create new entry with all required fields (no 'text' column)
             new_entry = {
                 'content': news_text,  # Ana haber metni
                 'ozet': news_text,     # Özet (aynı metin)
-                'language': 'tr',      # Türkçe
+                'language': detected_language,  # Auto-detected language
                 'dolar_skor': scores['dolar'],
                 'altin_skor': scores['altin'],
                 'borsa_skor': scores['borsa'],
                 'bitcoin_skor': scores['bitcoin'],
                 'content_norm': news_text,  # Normalize edilmiş içerik
-                'text': news_text,     # Text alanı
                 'added_by': user_name,
                 'added_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
@@ -701,20 +727,19 @@ Sonrasında her varlık için ayrı ayrı skor girmeniz istenecek:
             try:
                 df = pd.read_excel(excel_file)
             except:
-                # Create new DataFrame with correct columns if file doesn't exist
-                df = pd.DataFrame(columns=['content', 'ozet', 'language', 'dolar_skor', 'altin_skor', 'borsa_skor', 'bitcoin_skor', 'content_norm', 'text', 'added_by', 'added_date'])
+                # Create new DataFrame with correct columns if file doesn't exist (no 'text')
+                df = pd.DataFrame(columns=['content', 'ozet', 'language', 'dolar_skor', 'altin_skor', 'borsa_skor', 'bitcoin_skor', 'content_norm', 'added_by', 'added_date'])
             
             # Create a new row as a dictionary
             new_row = {
                 'content': str(news_text),
                 'ozet': str(news_text),
-                'language': 'tr',
+                'language': detected_language,  # Use detected language
                 'dolar_skor': int(scores['dolar']),
                 'altin_skor': int(scores['altin']),
                 'borsa_skor': int(scores['borsa']),
                 'bitcoin_skor': int(scores['bitcoin']),
                 'content_norm': str(news_text),
-                'text': str(news_text),
                 'added_by': str(user_name),
                 'added_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }

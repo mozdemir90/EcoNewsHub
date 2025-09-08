@@ -9,7 +9,7 @@ import joblib
 import os
 
 # 1. Etiketli veriyi oku
-df_train = pd.read_excel("data/training_data.xlsx")
+df_train = pd.read_excel("data/training_data4.xlsx")
 df_test = pd.read_excel("data/analiz_sonuclari2.xlsx")
 varliklar = ["dolar_skor", "altin_skor", "borsa_skor", "bitcoin_skor"]
 

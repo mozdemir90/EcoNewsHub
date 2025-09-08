@@ -2,35 +2,35 @@
 ==================================================
 
 ## Dolar
-**En İyi Model:** Word2Vec
-**R² Skoru:** -0.3599
-**MAE:** 0.6737
-**RMSE:** 0.9829
+**En İyi Model:** Deep Learning
+**R² Skoru:** -0.0014
+**MAE:** 0.5280
+**RMSE:** 0.8434
 
 ## Altin
-**En İyi Model:** GloVe
-**R² Skoru:** -0.0304
-**MAE:** 0.6902
-**RMSE:** 1.0029
+**En İyi Model:** Deep Learning
+**R² Skoru:** 0.0007
+**MAE:** 0.6796
+**RMSE:** 0.9877
 
 ## Borsa
-**En İyi Model:** GloVe
-**R² Skoru:** -0.0650
-**MAE:** 0.9057
-**RMSE:** 1.1929
+**En İyi Model:** Deep Learning
+**R² Skoru:** -0.0281
+**MAE:** 0.8805
+**RMSE:** 1.1721
 
 ## Bitcoin
-**En İyi Model:** TF-IDF
-**R² Skoru:** 0.1745
-**MAE:** 0.0479
-**RMSE:** 0.2750
+**En İyi Model:** Deep Learning
+**R² Skoru:** -0.0049
+**MAE:** 0.0504
+**RMSE:** 0.3034
 
 ## Genel Özet
-**En İyi Genel Performans:** TF-IDF - bitcoin_skor
-**R² Skoru:** 0.1745
+**En İyi Genel Performans:** Deep Learning - altin_skor
+**R² Skoru:** 0.0007
 
 ## Model Bazında Ortalama Performans
-- **TF-IDF:** R² = -0.1724
-- **GloVe:** R² = -0.1782
-- **Word2Vec:** R² = -0.8371
-- **Deep Learning:** R² = -13.1799
+- **Deep Learning:** R² = -0.0084
+- **TF-IDF:** R² = -0.0976
+- **GloVe:** R² = -0.1594
+- **Word2Vec:** R² = -0.4892

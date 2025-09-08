@@ -66,3 +66,4 @@ asyncio-throttle>=1.0.2
 flask>=2.2.0
 joblib>=1.2.0
 gensim>=4.3.0
+

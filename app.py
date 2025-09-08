@@ -11,6 +11,7 @@ from gensim.models import Word2Vec, KeyedVectors
 from functools import lru_cache
 import nltk
 from nltk.tokenize import sent_tokenize
+from datetime import datetime
 
 # NLTK verilerini indir (eğer yoksa)
 try:
@@ -36,6 +37,8 @@ try:
 except ImportError:
     print("⚠️ TensorFlow bulunamadı, Deep Learning modelleri kullanılamayacak")
     TENSORFLOW_AVAILABLE = False
+
+
 
 # Tokenizer yükle (TensorFlow olsun ya da olmasın)
 try:
@@ -99,6 +102,8 @@ def load_model_safe(model_path):
     except Exception as e:
         print(f"❌ Model yükleme hatası {model_path}: {e}")
         return None
+
+
 
 model_files = {
     "tfidf": {
@@ -201,7 +206,7 @@ except Exception as e:
     w2v_model = None
     print(f"❌ Word2Vec modeli yüklenemedi: {e}")
 
-DATA_PATH = "data/training_data.xlsx"
+DATA_PATH = "data/training_data4.xlsx"
 
 # Log klasörü ve dosyası
 LOG_DIR = "logs"
@@ -218,19 +223,25 @@ def log_user_action(ip, action_type, haber, skorlar, model):
     logging.info(f"IP: {ip} | Action: {action_type} | Model: {model} | Haber: {haber[:100]} | Skorlar: {skorlar}")
 
 def detect_language(text):
-    try:
-        lang = detect(str(text))
-        if lang == 'tr':
-            return 'tr'
-        elif lang == 'en':
-            return 'en'
-        else:
-            return lang  # başka bir dil ise orijinal kodu koru
-    except LangDetectException:
-        # fallback: eski yöntem
-        turkce_karakterler = set('çğıöşüÇĞIÖŞÜ')
-        if any(char in turkce_karakterler for char in str(text)):
-            return 'tr'
+    """Detect language based on Turkish characters"""
+    if not text:
+        return 'tr'  # Default to Turkish
+    
+    text = str(text)
+    # Turkish specific characters
+    turkish_chars = set('çğıöşüÇĞIÖŞÜ')
+    
+    # Count Turkish characters
+    turkish_count = sum(1 for char in text if char in turkish_chars)
+    total_chars = len([c for c in text if c.isalpha()])
+    
+    if total_chars == 0:
+        return 'tr'  # Default if no alphabetic characters
+    
+    # If more than 5% Turkish characters, consider it Turkish
+    if turkish_count / total_chars > 0.05:
+        return 'tr'
+    else:
         return 'en'
 
 def normalize_text(text):
@@ -286,24 +297,27 @@ def predict_deep_learning(text, model_name):
         # Debug: Tahmin değerlerini yazdır
         print(f"Raw predictions for {model_name}: {predictions[0]}")
         
-        # Daha agresif yuvarlama - daha çeşitli skorlar için
+        # 1-5 aralığı için yuvarlama (merkeze çökme etkisini azalt)
         rounded_preds = []
         for pred in predictions[0]:
-            # 0-5 aralığına sınırla
-            pred = np.clip(pred, 0, 5)
+            # 1-5 aralığına sınırla
+            pred = float(np.clip(pred, 1, 5))
             
-            # Daha agresif yuvarlama - 5 skorunu da dahil et
-            if pred < 1.5:
-                rounded_preds.append(0)
-            elif pred < 2.5:
-                rounded_preds.append(1)
-            elif pred < 3.5:
-                rounded_preds.append(2)
-            elif pred < 4.5:
-                rounded_preds.append(3)
-            else:
-                rounded_preds.append(5)  # 4.5+ değerler 5'e yuvarlanmalı
+            # Önce en yakın tam sayıya yuvarla
+            base = int(np.rint(pred))
+            base = max(1, min(5, base))
+            
+            # 3'e çökme etkisini azalt: 3'e yakın ama anlamlı sapma varsa uzağa yuvarla
+            # Eşik: 0.35 puan
+            if base == 3:
+                if pred >= 3.35:
+                    base = 4
+                elif pred <= 2.65:
+                    base = 2
+            
+            rounded_preds.append(base)
         
+        print(f"Raw predictions for {model_name}: {predictions[0]}")
         print(f"Rounded predictions for {model_name}: {rounded_preds}")
         
         return {
@@ -314,6 +328,126 @@ def predict_deep_learning(text, model_name):
         }
     except Exception as e:
         print(f"Deep Learning tahmin hatası: {e}")
+        return None
+
+
+
+
+
+def predict_hybrid(text, dl_model_name="cnn", ml_model_name="rf", ml_method="tfidf", weights=(0.6, 0.4)):
+    """
+    Hibrit yaklaşım: Deep Learning + Geleneksel ML modellerini birleştirir
+    
+    Args:
+        text: Tahmin edilecek haber metni
+        dl_model_name: Deep Learning model adı (cnn, lstm, cnn_lstm)
+        ml_model_name: ML model adı (rf, svm, nb, etc.)
+        ml_method: ML yöntemi (tfidf, w2v, glove)
+        weights: (dl_weight, ml_weight) ağırlıkları
+    
+    Returns:
+        Dict: Birleştirilmiş tahminler
+    """
+    try:
+        # Deep Learning tahmini
+        dl_prediction = None
+        if TENSORFLOW_AVAILABLE and dl_model_name in DL_MODELS:
+            dl_prediction = predict_deep_learning(text, dl_model_name)
+        
+        # Geleneksel ML tahmini
+        ml_prediction = None
+        if ml_method == "tfidf":
+            vectorizer = get_vectorizer_tfidf()
+            if vectorizer is not None:
+                X = vectorizer.transform([text])
+                if ml_method in model_files and ml_model_name in model_files[ml_method]:
+                    modeller = model_files[ml_method][ml_model_name]
+                    if all(model is not None for model in modeller.values()):
+                        X_input = X.toarray() if ml_model_name == "nb" else X
+                        ml_prediction = {
+                            "Dolar": modeller["Dolar"].predict(X_input)[0],
+                            "Altın": modeller["Altın"].predict(X_input)[0],
+                            "Borsa": modeller["Borsa"].predict(X_input)[0],
+                            "Bitcoin": modeller["Bitcoin"].predict(X_input)[0]
+                        }
+        
+        elif ml_method == "w2v" and w2v_model is not None:
+            tokens = tokenize(text)
+            X = np.array([get_sentence_vector(tokens, w2v_model)])
+            if ml_method in model_files and ml_model_name in model_files[ml_method]:
+                modeller = model_files[ml_method][ml_model_name]
+                if all(model is not None for model in modeller.values()):
+                    ml_prediction = {
+                        "Dolar": modeller["Dolar"].predict(X)[0],
+                        "Altın": modeller["Altın"].predict(X)[0],
+                        "Borsa": modeller["Borsa"].predict(X)[0],
+                        "Bitcoin": modeller["Bitcoin"].predict(X)[0]
+                    }
+        
+        elif ml_method == "glove" and glove_vectors is not None:
+            tokens = tokenize(text)
+            X = np.array([get_sentence_vector_glove(tokens, glove_vectors)])
+            if ml_method in model_files and ml_model_name in model_files[ml_method]:
+                modeller = model_files[ml_method][ml_model_name]
+                if all(model is not None for model in modeller.values()):
+                    ml_prediction = {
+                        "Dolar": modeller["Dolar"].predict(X)[0],
+                        "Altın": modeller["Altın"].predict(X)[0],
+                        "Borsa": modeller["Borsa"].predict(X)[0],
+                        "Bitcoin": modeller["Bitcoin"].predict(X)[0]
+                    }
+        
+        # Hibrit tahmin hesaplama
+        if dl_prediction is not None and ml_prediction is not None:
+            # Ağırlıklı ortalama - ML'ye daha fazla ağırlık ver
+            dl_weight, ml_weight = weights
+            hybrid_prediction = {}
+            for varlik in ["Dolar", "Altın", "Borsa", "Bitcoin"]:
+                # ML tahminlerine daha fazla ağırlık ver (çünkü daha çeşitli)
+                adjusted_ml_weight = ml_weight * 1.2  # ML'yi %20 artır
+                adjusted_dl_weight = dl_weight * 0.8  # DL'yi %20 azalt
+                
+                hybrid_score = (dl_prediction[varlik] * adjusted_dl_weight + ml_prediction[varlik] * adjusted_ml_weight)
+                
+                # Daha hassas yuvarlama - ML'nin çeşitliliğini koru
+                if hybrid_score < 1.3:
+                    hybrid_prediction[varlik] = 1
+                elif hybrid_score < 2.3:
+                    hybrid_prediction[varlik] = 2
+                elif hybrid_score < 3.3:
+                    hybrid_prediction[varlik] = 3
+                elif hybrid_score < 4.3:
+                    hybrid_prediction[varlik] = 4
+                else:
+                    hybrid_prediction[varlik] = 5
+            return {
+                "prediction": hybrid_prediction,
+                "dl_prediction": dl_prediction,
+                "ml_prediction": ml_prediction,
+                "method": "hybrid"
+            }
+        
+        elif dl_prediction is not None:
+            return {
+                "prediction": dl_prediction,
+                "dl_prediction": dl_prediction,
+                "ml_prediction": None,
+                "method": "dl_only"
+            }
+        
+        elif ml_prediction is not None:
+            return {
+                "prediction": ml_prediction,
+                "dl_prediction": None,
+                "ml_prediction": ml_prediction,
+                "method": "ml_only"
+            }
+        
+        else:
+            return None
+            
+    except Exception as e:
+        print(f"Hibrit tahmin hatası: {e}")
         return None
 
 
@@ -372,24 +506,29 @@ def index():
     secili_model = "rf"
     secili_yontem = "tfidf"
     secili_dl_model = "cnn"  # Varsayılan değer
+
+    uyari_mesaji = ""  # Varsayılan olarak boş uyarı mesajı
     if request.method == "POST":
         haber = request.form["haber"]
         secili_yontem = request.form.get("yontem", "tfidf")
         secili_model = request.form.get("model", "rf")
         secili_dl_model = request.form.get("dl_model", "cnn")
+
         if len(haber.split()) < 4:
             skorlar = {"Dolar": 3, "Altın": 3, "Borsa": 3, "Bitcoin": 3}
+            uyari_mesaji = f"⚠️ Uyarı: {len(haber.split())} kelime girildi. Minimum 4 kelime gereklidir. Varsayılan nötr skor (3) uygulandı."
         else:
+            uyari_mesaji = ""
             if secili_yontem == "tfidf":
                 vectorizer_tfidf = get_vectorizer_tfidf()
                 if vectorizer_tfidf is None:
                     skorlar = {"Dolar": "TF-IDF Vectorizer Yok", "Altın": "TF-IDF Vectorizer Yok", "Borsa": "TF-IDF Vectorizer Yok", "Bitcoin": "TF-IDF Vectorizer Yok"}
-                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
                 X = vectorizer_tfidf.transform([haber])
             elif secili_yontem == "w2v":
                 if w2v_model is None:
                     skorlar = {"Dolar": "Word2Vec Model Yok", "Altın": "Word2Vec Model Yok", "Borsa": "Word2Vec Model Yok", "Bitcoin": "Word2Vec Model Yok"}
-                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
                 tokens = tokenize(haber)
                 X = np.array([get_sentence_vector(tokens, w2v_model)])
             elif secili_yontem == "glove":
@@ -398,12 +537,12 @@ def index():
                     X = np.array([get_sentence_vector_glove(tokens, glove_vectors)])
                 else:
                     skorlar = {"Dolar": "GloVe yok", "Altın": "GloVe yok", "Borsa": "GloVe yok", "Bitcoin": "GloVe yok"}
-                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
             elif secili_yontem == "deep_learning":
                 # Deep Learning tahmini
                 if not TENSORFLOW_AVAILABLE:
                     skorlar = {"Dolar": "TensorFlow Yok", "Altın": "TensorFlow Yok", "Borsa": "TensorFlow Yok", "Bitcoin": "TensorFlow Yok"}
-                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
                 
                 dl_result = predict_deep_learning(haber, secili_dl_model)
                 if dl_result is not None:
@@ -421,7 +560,46 @@ def index():
                         "Bitcoin": min(5, max(1, round(modeller["Bitcoin"].predict(X)[0]))),
                     }
                 log_user_action(request.remote_addr, f"tahmin_{secili_yontem}_{secili_dl_model}", haber, skorlar, secili_model)
-                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
+            
+
+            
+            elif secili_yontem == "hybrid":
+                # Hibrit yaklaşım
+                hybrid_weights = request.form.get("hybrid_weights", "0.4,0.6")
+                dl_weight, ml_weight = map(float, hybrid_weights.split(','))
+                
+                hybrid_result = predict_hybrid(
+                    haber, 
+                    dl_model_name=secili_dl_model,
+                    ml_model_name=secili_model,
+                    ml_method="tfidf",  # Varsayılan olarak TF-IDF
+                    weights=(dl_weight, ml_weight)
+                )
+                
+                if hybrid_result is not None:
+                    skorlar = hybrid_result["prediction"]
+                    # Detay bilgileri için log
+                    print(f"Hibrit tahmin: {hybrid_result['method']}")
+                    if hybrid_result['dl_prediction']:
+                        print(f"DL tahmin: {hybrid_result['dl_prediction']}")
+                    if hybrid_result['ml_prediction']:
+                        print(f"ML tahmin: {hybrid_result['ml_prediction']}")
+                else:
+                    # Fallback: TF-IDF ile
+                    print("Hibrit tahmin başarısız, TF-IDF ile fallback yapılıyor...")
+                    vectorizer_tfidf = get_vectorizer_tfidf()
+                    X = vectorizer_tfidf.transform([haber])
+                    modeller = model_files["tfidf"]["rf"]
+                    skorlar = {
+                        "Dolar": min(5, max(1, round(modeller["Dolar"].predict(X)[0]))),
+                        "Altın": min(5, max(1, round(modeller["Altın"].predict(X)[0]))),
+                        "Borsa": min(5, max(1, round(modeller["Borsa"].predict(X)[0]))),
+                        "Bitcoin": min(5, max(1, round(modeller["Bitcoin"].predict(X)[0]))),
+                    }
+                
+                log_user_action(request.remote_addr, f"tahmin_hybrid_{secili_dl_model}_{secili_model}", haber, skorlar, f"hybrid_{dl_weight}_{ml_weight}")
+                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
 
             if secili_yontem == "tfidf" and secili_model == "nb":
                 X_input = X.toarray()
@@ -431,14 +609,14 @@ def index():
             # Model kontrolü
             if secili_yontem not in model_files or secili_model not in model_files[secili_yontem]:
                 skorlar = {"Dolar": "Model Yok", "Altın": "Model Yok", "Borsa": "Model Yok", "Bitcoin": "Model Yok"}
-                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
             
             modeller = model_files[secili_yontem][secili_model]
             
             # Model dosyalarının varlığını kontrol et
             if any(model is None for model in modeller.values()):
                 skorlar = {"Dolar": "Model Dosyası Yok", "Altın": "Model Dosyası Yok", "Borsa": "Model Dosyası Yok", "Bitcoin": "Model Dosyası Yok"}
-                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+                return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
             
             skorlar = {
                 "Dolar": min(5, max(1, round(modeller["Dolar"].predict(X_input)[0]))),
@@ -447,7 +625,7 @@ def index():
                 "Bitcoin": min(5, max(1, round(modeller["Bitcoin"].predict(X_input)[0]))),
             }
         log_user_action(request.remote_addr, f"tahmin_{secili_yontem}", haber, skorlar, secili_model)
-    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model)
+    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
 
 @app.route("/ekle", methods=["GET", "POST"])
 def ekle():
@@ -490,7 +668,9 @@ def ekle():
                 "dolar_skor": kullanici_skor["Dolar"],
                 "altin_skor": kullanici_skor["Altın"],
                 "borsa_skor": kullanici_skor["Borsa"],
-                "bitcoin_skor": kullanici_skor["Bitcoin"]
+                "bitcoin_skor": kullanici_skor["Bitcoin"],
+                "added_by": "system",
+                "added_date": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
             if os.path.exists(DATA_PATH):
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
