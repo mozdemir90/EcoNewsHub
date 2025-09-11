@@ -633,6 +633,30 @@ def index():
         log_user_action(request.remote_addr, f"tahmin_{secili_yontem}", haber, skorlar, secili_model)
     return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
 
+@app.route("/vectors")
+def vectors():
+    if not VECTOR_STORE_AVAILABLE:
+        return render_template("vectors.html", enabled=False, items=[], total=0, page=1, limit=50)
+    try:
+        vs = get_vector_store()
+        if not vs.enabled:
+            return render_template("vectors.html", enabled=False, items=[], total=0, page=1, limit=50)
+        # Simple pagination
+        try:
+            page = int(request.args.get("page", 1))
+        except Exception:
+            page = 1
+        try:
+            limit = int(request.args.get("limit", 50))
+        except Exception:
+            limit = 50
+        offset = max(0, (page - 1) * limit)
+        data = vs.list_all(offset=offset, limit=limit)
+        return render_template("vectors.html", enabled=True, items=data.get("items", []), total=data.get("total", 0), page=page, limit=limit)
+    except Exception as exc:
+        print(f"/vectors error: {exc}")
+        return render_template("vectors.html", enabled=False, items=[], total=0, page=1, limit=50)
+
 @app.route("/ekle", methods=["GET", "POST"])
 def ekle():
     skorlar = None

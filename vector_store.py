@@ -56,6 +56,34 @@ class VectorStore:
             return []
         return self.embedder.encode(texts, normalize_embeddings=True).tolist()
 
+    def list_all(self, offset: int = 0, limit: int = 50) -> Dict:
+        """List documents with pagination. Returns {total, items}.
+        Notes: Uses where={} and where_document={} to fetch all; may be batched by Chroma internally.
+        """
+        if not self.enabled:
+            return {"total": 0, "items": []}
+        try:
+            # Chroma get supports pagination via limit/offset
+            got = self.collection.get(limit=limit, offset=offset, include=["documents", "metadatas", "ids"])
+            total = got.get("total", None)
+            # Some versions may not return total; estimate crudely
+            if total is None:
+                total = offset + len(got.get("ids", []))
+            items = []
+            docs = got.get("documents", []) or []
+            metas = got.get("metadatas", []) or []
+            ids = got.get("ids", []) or []
+            for i in range(len(ids)):
+                items.append({
+                    "id": ids[i],
+                    "document": docs[i] if i < len(docs) else None,
+                    "metadata": metas[i] if i < len(metas) else {},
+                })
+            return {"total": total, "items": items}
+        except Exception as exc:
+            print(f"[VectorStore] list_all failed: {exc}")
+            return {"total": 0, "items": []}
+
 
 # Singleton accessor
 _singleton: Optional[VectorStore] = None

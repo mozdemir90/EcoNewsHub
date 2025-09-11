@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vektör Veritabanı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #F5F7FA; }
+        .container { background:#fff; max-width: 900px; margin: 30px auto; padding: 24px; border-radius: 10px; box-shadow: 0 4px 24px #b0b8c1; }
+        h2 { color: #34495E; margin-top: 0; }
+        .meta { color: #555; font-size: 0.92em; }
+        .item { border:1px solid #E5E7EB; border-radius: 8px; padding: 12px 14px; background:#fafafa; margin-bottom: 12px; }
+        .doc { white-space: pre-wrap; color: #111827; }
+        .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 12px; }
+        .btn { background:#3B82F6; color:#fff; border:none; padding:8px 12px; border-radius:6px; text-decoration:none; font-size: 0.95em; }
+        .btn:hover { background:#2563EB; }
+        .pagination { margin-top: 16px; display:flex; gap: 10px; }
+        .muted { color:#6b7280; }
+        input[type=number] { padding:6px 8px; border:1px solid #CED4DA; border-radius:6px; width:90px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <h2>Vektör Veritabanı</h2>
+            <a href="/" class="btn">Geri Dön</a>
+        </div>
+        {% if not enabled %}
+            <div class="item">
+                <div class="doc">Vektör veritabanı etkin değil. `chromadb` ve `sentence-transformers` kurulu mu?</div>
+            </div>
+        {% else %}
+            <div class="meta">Toplam: {{ total }} | Sayfa: {{ page }} | Limit: {{ limit }}</div>
+            {% for it in items %}
+                <div class="item">
+                    <div class="meta">ID: {{ it.id }}</div>
+                    <div class="doc">{{ it.document }}</div>
+                    {% if it.metadata %}
+                        <div class="meta">Meta: {{ it.metadata }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <div class="pagination">
+                {% set prev_page = page - 1 %}
+                {% set next_page = page + 1 %}
+                {% if prev_page >= 1 %}
+                <a class="btn" href="/vectors?page={{ prev_page }}&limit={{ limit }}">Önceki</a>
+                {% else %}
+                <span class="muted">Önceki</span>
+                {% endif %}
+                <a class="btn" href="/vectors?page={{ next_page }}&limit={{ limit }}">Sonraki</a>
+                <form method="get" style="display:inline-flex; gap:8px; align-items:center;">
+                    <label for="page" class="muted">Sayfa</label>
+                    <input type="number" min="1" name="page" id="page" value="{{ page }}"/>
+                    <label for="limit" class="muted">Limit</label>
+                    <input type="number" min="1" max="200" name="limit" id="limit" value="{{ limit }}"/>
+                    <button class="btn" type="submit">Git</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+
+
