@@ -26,6 +26,10 @@ requests
 schedule
 python-telegram-bot
 
+# Vector store (optional)
+chromadb>=0.5.0
+sentence-transformers>=2.6.0
+
 
 # Excel export functionality
 openpyxl>=3.0.10

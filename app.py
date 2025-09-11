@@ -12,6 +12,12 @@ from functools import lru_cache
 import nltk
 from nltk.tokenize import sent_tokenize
 from datetime import datetime
+try:
+    from vector_store import get_vector_store
+    VECTOR_STORE_AVAILABLE = True
+except Exception as _vs_exc:
+    print(f"[VectorStore] import failed: {_vs_exc}")
+    VECTOR_STORE_AVAILABLE = False
 
 # NLTK verilerini indir (eğer yoksa)
 try:
@@ -677,6 +683,27 @@ def ekle():
             else:
                 df = pd.DataFrame([new_row])
             df.to_excel(DATA_PATH, index=False)
+
+            # Vector store'a isteğe bağlı indeksleme (yapıyı bozmadan)
+            try:
+                if VECTOR_STORE_AVAILABLE:
+                    vs = get_vector_store()
+                    if vs.enabled:
+                        vs.add(
+                            documents=[haber_temizlenmis],
+                            metadatas=[{
+                                "language": new_row["language"],
+                                "dolar_skor": new_row["dolar_skor"],
+                                "altin_skor": new_row["altin_skor"],
+                                "borsa_skor": new_row["borsa_skor"],
+                                "bitcoin_skor": new_row["bitcoin_skor"],
+                                "added_by": new_row["added_by"],
+                                "added_date": new_row["added_date"],
+                            }],
+                            ids=[f"td4_{len(df)}"]
+                        )
+            except Exception as exc:
+                print(f"[VectorStore] add failed: {exc}")
             mesaj = "Haber başarıyla eğitim setine eklendi!"
             skorlar = kullanici_skor  # Formda tekrar gösterilsin
             # Log ekleme işlemi
