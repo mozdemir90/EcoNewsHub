@@ -85,11 +85,11 @@ class FinancialNewsBot:
     def should_reload_models(self):
         """Check if models need to be reloaded based on file modification times"""
         model_files = {
-            'word2vec': 'models/word2vec/word2vec_model.model',
-            'dolar': 'models/glove/dolar_skor_rf_glove_model.pkl',
-            'altin': 'models/glove/altin_skor_rf_glove_model.pkl', 
-            'borsa': 'models/glove/borsa_skor_rf_glove_model.pkl',
-            'bitcoin': 'models/glove/bitcoin_skor_rf_glove_model.pkl'
+            'vectorizer': 'models/tf-idf/tfidf_vectorizer.pkl',
+            'dolar_nb': 'models/tf-idf/dolar_skor_nb_model.pkl',
+            'altin_nb': 'models/tf-idf/altin_skor_nb_model.pkl', 
+            'borsa_nb': 'models/tf-idf/borsa_skor_nb_model.pkl',
+            'bitcoin_nb': 'models/tf-idf/bitcoin_skor_nb_model.pkl'
         }
         
         for model_name, file_path in model_files.items():
@@ -108,31 +108,30 @@ class FinancialNewsBot:
             if not self.should_reload_models():
                 return
             
-            logging.info("🔄 Reloading models...")
+            logging.info("🔄 Reloading TF-IDF + NB models...")
             
-            # Load Word2Vec model for Glove embeddings
-            w2v_path = 'models/word2vec/word2vec_model.model'
-            if os.path.exists(w2v_path):
-                from gensim.models import Word2Vec
-                self.word2vec_model = Word2Vec.load(w2v_path)
-                self.model_last_modified['word2vec'] = self.get_file_modification_time(w2v_path)
-                logging.info("✅ Word2Vec model loaded")
+            # Load TF-IDF vectorizer
+            vec_path = 'models/tf-idf/tfidf_vectorizer.pkl'
+            if os.path.exists(vec_path):
+                self.vectorizer = joblib.load(vec_path)
+                self.model_last_modified['vectorizer'] = self.get_file_modification_time(vec_path)
+                logging.info("✅ TF-IDF vectorizer loaded")
             else:
-                logging.error("❌ Word2Vec model not found")
+                logging.error("❌ TF-IDF vectorizer not found")
                 return
             
-            # Load Glove RF models for each asset
+            # Load Naive Bayes models for each asset
             assets = ['dolar', 'altin', 'borsa', 'bitcoin']
             for asset in assets:
-                model_path = f'models/glove/{asset}_skor_rf_glove_model.pkl'
+                model_path = f'models/tf-idf/{asset}_skor_nb_model.pkl'
                 if os.path.exists(model_path):
                     self.models[asset] = joblib.load(model_path)
-                    self.model_last_modified[asset] = self.get_file_modification_time(model_path)
-                    logging.info(f"✅ {asset} Glove RF model loaded")
+                    self.model_last_modified[f'{asset}_nb'] = self.get_file_modification_time(model_path)
+                    logging.info(f"✅ {asset} NB model loaded")
                 else:
-                    logging.warning(f"⚠️ {asset} Glove RF model not found")
+                    logging.warning(f"⚠️ {asset} NB model not found")
             
-            logging.info("✅ All Glove RF models loaded successfully")
+            logging.info("✅ All TF-IDF + NB models loaded successfully")
             
         except Exception as e:
             logging.error(f"❌ Error loading models: {e}")
@@ -150,36 +149,33 @@ class FinancialNewsBot:
         return text
     
     def predict_sentiment(self, text):
-        """Predict sentiment for given text using Glove RF models"""
+        """Predict sentiment for given text using TF-IDF + Naive Bayes models"""
         try:
             # Check if models need reloading before prediction
             if self.should_reload_models():
                 self.load_models()
-            
+ 
             logging.info(f"🔍 Predicting sentiment for text: {text[:100]}...")
-            logging.info(f"🔍 Word2Vec model loaded: {hasattr(self, 'word2vec_model')}")
+            logging.info(f"🔍 Vectorizer loaded: {self.vectorizer is not None}")
             logging.info(f"🔍 Models loaded: {list(self.models.keys())}")
-            
-            if not hasattr(self, 'word2vec_model') or not self.models:
-                logging.error("❌ Word2Vec model or RF models not loaded")
+ 
+            if self.vectorizer is None or not self.models:
+                logging.error("❌ Vectorizer or NB models not loaded")
                 return None
-            
+ 
             # Preprocess text
             processed_text = self.preprocess_text(text)
             if not processed_text:
                 logging.error("❌ No processed text after preprocessing")
                 return None
-            
+ 
             logging.info(f"🔍 Processed text: {processed_text[:100]}...")
-            
-            # Get Glove embeddings
-            X = self.get_glove_embeddings(processed_text)
-            if X is None:
-                return None
-            
-            logging.info(f"🔍 Glove embeddings created, shape: {X.shape}")
-            
-            # Get predictions for each asset using Glove RF models
+ 
+            # Vectorize text
+            X = self.vectorizer.transform([processed_text])
+            X_input = X.toarray()  # NB dense input
+ 
+            # Get predictions for each asset using NB models
             predictions = {}
             asset_names = {
                 'dolar': 'USD',
@@ -187,18 +183,36 @@ class FinancialNewsBot:
                 'borsa': 'Stock Market',
                 'bitcoin': 'Bitcoin'
             }
-            
+ 
             for asset in ['dolar', 'altin', 'borsa', 'bitcoin']:
                 if asset in self.models:
-                    pred = self.models[asset].predict([X])[0]
+                    pred = self.models[asset].predict(X_input)[0]
                     pred = min(5, max(1, round(pred)))  # Ensure 1-5 range
                     predictions[asset_names[asset]] = pred
-                    logging.info(f"✅ {asset}_skor: {pred}/5 (using Glove RF)")
+                    logging.info(f"✅ {asset}_skor: {pred}/5 (using TF-IDF + NB)")
                 else:
                     logging.warning(f"⚠️ Model not found for {asset}")
-            
+ 
+            # Fetch 2 nearest examples from vector DB (if available)
+            nearest_text = ""
+            try:
+                from vector_store import get_vector_store
+                vs = get_vector_store()
+                if getattr(vs, 'enabled', False):
+                    res = vs.query(processed_text, n_results=2)
+                    if res:
+                        lines = []
+                        for item in res:
+                            meta = item.get('metadata', {}) or {}
+                            sim = None if item.get('distance') is None else round(1 - float(item.get('distance')), 3)
+                            snippet = (item.get('document') or '')[:200]
+                            lines.append(f"• ID: {item.get('id')} | sim: {sim}\n  D:{meta.get('dolar_skor')} A:{meta.get('altin_skor')} B:{meta.get('borsa_skor')} BTC:{meta.get('bitcoin_skor')}\n  {snippet}")
+                        nearest_text = "\n\nBenzer Örnekler:\n" + "\n".join(lines)
+            except Exception as e:
+                logging.warning(f"Vector fetch failed: {e}")
+
             logging.info(f"🔍 Final predictions: {predictions}")
-            return predictions
+            return {"predictions": predictions, "nearest": nearest_text}
             
         except Exception as e:
             logging.error(f"❌ Prediction error: {e}")
@@ -446,25 +460,28 @@ class FinancialNewsBot:
                 4: "🟢",  # Positive
                 5: "🟢"   # Very positive
             }
-            
+ 
             # Format predictions
             pred_text = ""
-            for asset, score in predictions.items():
+            preds = predictions["predictions"] if isinstance(predictions, dict) else predictions
+            for asset, score in preds.items():
                 emoji = sentiment_emojis.get(score, "⚪")
                 pred_text += f"{emoji} {asset}: {score}/5\n"
-            
+ 
             # Create message
+            nearest_block = predictions.get("nearest", "") if isinstance(predictions, dict) else ""
             message = f"""
-📰 **{news.get('source', 'Unknown')}**
-📅 {news.get('date', 'No date')}
-
-**{news.get('title', 'No title')}**
-
-📊 **Analysis (Glove RF):**
-{pred_text}
-
-🤖 **Model:** Glove + Random Forest
-🔗 [Read More]({news.get('url', '#')})
+ 📰 **{news.get('source', 'Unknown')}**
+ 📅 {news.get('date', 'No date')}
+ 
+ **{news.get('title', 'No title')}**
+ 
+ 📊 **Analysis (TF-IDF + Naive Bayes):**
+ {pred_text}
+ 
+ 🤖 **Model:** TF-IDF + Naive Bayes
+ 🔗 [Read More]({news.get('url', '#')})
+{nearest_block}
             """.strip()
             
             return message
@@ -519,7 +536,6 @@ class FinancialNewsBot:
                 try:
                     logging.info(f"📝 Processing news {i+1}/{len(new_news)}: {news.get('title', '')[:50]}...")
                     
-                    # Get sentiment prediction
                     predictions = self.predict_sentiment(news.get('content', ''))
                     
                     if predictions:

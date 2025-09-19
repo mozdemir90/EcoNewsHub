@@ -509,9 +509,10 @@ app = Flask(__name__)
 def index():
     skorlar = None
     haber = ""
-    secili_model = "rf"
+    secili_model = "nb"
     secili_yontem = "tfidf"
     secili_dl_model = "cnn"  # Varsayılan değer
+    benzerler = []
 
     uyari_mesaji = ""  # Varsayılan olarak boş uyarı mesajı
     if request.method == "POST":
@@ -519,6 +520,25 @@ def index():
         secili_yontem = request.form.get("yontem", "tfidf")
         secili_model = request.form.get("model", "rf")
         secili_dl_model = request.form.get("dl_model", "cnn")
+
+        # Benzerleri Göster butonu
+        if "benzer" in request.form and VECTOR_STORE_AVAILABLE:
+            try:
+                vs = get_vector_store()
+                if vs.enabled:
+                    res = vs.query(haber, n_results=3)
+                    for item in res:
+                        meta = item.get("metadata", {}) or {}
+                        benzerler.append({
+                            "id": item.get("id"),
+                            "document": (item.get("document") or "")[:240],
+                            "distance": item.get("distance"),
+                            "similarity": None if item.get("distance") is None else round(1 - float(item.get("distance")), 3),
+                            "meta": meta,
+                        })
+            except Exception as exc:
+                print(f"[VectorStore] search failed: {exc}")
+            return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji, benzerler=benzerler)
 
         if len(haber.split()) < 4:
             skorlar = {"Dolar": 3, "Altın": 3, "Borsa": 3, "Bitcoin": 3}
@@ -631,7 +651,7 @@ def index():
                 "Bitcoin": min(5, max(1, round(modeller["Bitcoin"].predict(X_input)[0]))),
             }
         log_user_action(request.remote_addr, f"tahmin_{secili_yontem}", haber, skorlar, secili_model)
-    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji)
+    return render_template("index.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_yontem=secili_yontem, secili_dl_model=secili_dl_model, uyari_mesaji=uyari_mesaji, benzerler=benzerler)
 
 @app.route("/vectors")
 def vectors():
@@ -657,6 +677,80 @@ def vectors():
         print(f"/vectors error: {exc}")
         return render_template("vectors.html", enabled=False, items=[], total=0, page=1, limit=50)
 
+@app.route("/cooc", methods=["GET"])
+def cooc():
+    """Kelime ikilileri/üçlüleri bazında vektör DB'deki kayıtları tarayıp skor istatistiklerini gösterir."""
+    if not VECTOR_STORE_AVAILABLE:
+        return render_template("cooc.html", enabled=False, results=[], q="", n=2, min_count=5)
+    q = request.args.get("q", "").strip()
+    try:
+        n = int(request.args.get("n", 2))
+        min_count = int(request.args.get("min_count", 5))
+    except Exception:
+        n, min_count = 2, 5
+    results = []
+    try:
+        vs = get_vector_store()
+        if not vs.enabled:
+            return render_template("cooc.html", enabled=False, results=[], q=q, n=n, min_count=min_count)
+        # Basit tarama: tüm kayıtları sayfalar halinde çek ve n-gram frekans + skor ortalamaları hesapla
+        offset = 0
+        limit = 500
+        from collections import defaultdict
+        import re
+        freq = defaultdict(int)
+        agg = defaultdict(lambda: {"cnt":0, "d":0, "a":0, "b":0, "btc":0})
+        token_re = re.compile(r"[\wçğıöşüÇĞİÖŞÜ']+")
+        while True:
+            data = vs.list_all(offset=offset, limit=limit)
+            items = data.get("items", [])
+            if not items:
+                break
+            for it in items:
+                doc = (it.get("document") or "").lower()
+                if not doc:
+                    continue
+                if q and q not in doc:
+                    continue
+                tokens = token_re.findall(doc)
+                # n-gram çıkar
+                if len(tokens) >= n:
+                    for i in range(len(tokens)-n+1):
+                        ng = tuple(tokens[i:i+n])
+                        key = " ".join(ng)
+                        freq[key] += 1
+                        md = it.get("metadata", {}) or {}
+                        try:
+                            agg[key]["cnt"] += 1
+                            agg[key]["d"] += float(md.get("dolar_skor") or 0)
+                            agg[key]["a"] += float(md.get("altin_skor") or 0)
+                            agg[key]["b"] += float(md.get("borsa_skor") or 0)
+                            agg[key]["btc"] += float(md.get("bitcoin_skor") or 0)
+                        except Exception:
+                            pass
+            if len(items) < limit:
+                break
+            offset += limit
+        # Sonuçları derle
+        for key, c in freq.items():
+            if c >= min_count:
+                s = agg[key]
+                cnt = max(1, s["cnt"])
+                results.append({
+                    "ngram": key,
+                    "count": c,
+                    "dolar_avg": round(s["d"]/cnt, 3),
+                    "altin_avg": round(s["a"]/cnt, 3),
+                    "borsa_avg": round(s["b"]/cnt, 3),
+                    "bitcoin_avg": round(s["btc"]/cnt, 3),
+                })
+        # Sırala: sıklık ve toplam ortalama etki (mutlak sapma büyük)
+        results.sort(key=lambda r: (r["count"], r["dolar_avg"]+r["altin_avg"]+r["borsa_avg"]+r["bitcoin_avg"]), reverse=True)
+    except Exception as exc:
+        print(f"/cooc error: {exc}")
+        results = []
+    return render_template("cooc.html", enabled=True, results=results, q=q, n=n, min_count=min_count)
+
 @app.route("/ekle", methods=["GET", "POST"])
 def ekle():
     skorlar = None
@@ -665,6 +759,7 @@ def ekle():
     secili_dl_model = "cnn"  # Varsayılan değer
     mesaj = ""
     kullanici_skor = {}
+    benzerler = []
     if request.method == "POST":
         haber = request.form["haber"]
         secili_model = request.form.get("model", "rf")
@@ -678,6 +773,30 @@ def ekle():
                 "Bitcoin": max(1, int(request.form.get("skor_bitcoin", 3)))  # Minimum 1
             }
             haber_norm = normalize_text(haber)
+            # Semantik benzerlik kontrolü (cosine >= 0.85)
+            try:
+                if VECTOR_STORE_AVAILABLE:
+                    vs = get_vector_store()
+                    if vs.enabled:
+                        res = vs.query(haber, n_results=3)
+                        for item in res:
+                            dist = item.get("distance")
+                            if dist is None:
+                                continue
+                            sim = 1 - float(dist)
+                            if sim >= 0.85:
+                                meta = item.get("metadata", {}) or {}
+                                benzerler.append({
+                                    "id": item.get("id"),
+                                    "document": (item.get("document") or "")[:200],
+                                    "similarity": round(sim, 3),
+                                    "meta": meta,
+                                })
+                        if benzerler:
+                            mesaj = "Benzer kayıtlar var (cosine ≥ 0.85). Lütfen kontrol edin."
+                            return render_template("add.html", skorlar=kullanici_skor, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj, benzerler=benzerler)
+            except Exception as exc:
+                print(f"[VectorStore] dupe check failed: {exc}")
             if os.path.exists(DATA_PATH):
                 df = pd.read_excel(DATA_PATH)
                 existing_norms = get_existing_normalized_set(df)
@@ -754,7 +873,7 @@ def ekle():
             log_user_action(request.remote_addr, "tahmin_ekle", haber, skorlar, secili_model)
     
     # GET request veya POST işlemi sonrası template'i render et
-    return render_template("add.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj)
+    return render_template("add.html", skorlar=skorlar, haber=haber, secili_model=secili_model, secili_dl_model=secili_dl_model, mesaj=mesaj, benzerler=benzerler)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)

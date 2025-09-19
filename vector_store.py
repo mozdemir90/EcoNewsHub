@@ -32,9 +32,21 @@ class VectorStore:
             ids = [f"doc_{i}" for i in range(len(documents))]
         if metadatas is None:
             metadatas = [{} for _ in documents]
+        # sanitize metadata: drop None, cast others to allowed primitive types
+        sanitized = []
+        for md in metadatas:
+            safe = {}
+            for k, v in (md or {}).items():
+                if v is None:
+                    continue
+                if isinstance(v, (str, int, float, bool)):
+                    safe[k] = v
+                else:
+                    safe[k] = str(v)
+            sanitized.append(safe)
 
         embeddings = self._encode(documents)
-        self.collection.add(documents=documents, embeddings=embeddings, metadatas=metadatas, ids=ids)
+        self.collection.add(documents=documents, embeddings=embeddings, metadatas=sanitized, ids=ids)
 
     def query(self, query_text: str, n_results: int = 5) -> List[Dict]:
         if not self.enabled or not query_text:
@@ -64,7 +76,8 @@ class VectorStore:
             return {"total": 0, "items": []}
         try:
             # Chroma get supports pagination via limit/offset
-            got = self.collection.get(limit=limit, offset=offset, include=["documents", "metadatas", "ids"])
+            # Note: some versions do not accept 'ids' in include; ids are returned by default
+            got = self.collection.get(limit=limit, offset=offset, include=["documents", "metadatas"])
             total = got.get("total", None)
             # Some versions may not return total; estimate crudely
             if total is None:
@@ -79,6 +92,26 @@ class VectorStore:
                     "document": docs[i] if i < len(docs) else None,
                     "metadata": metas[i] if i < len(metas) else {},
                 })
+            # Stable, meaningful ordering: live adds (td4_*) first by desc index, then backfill
+            def _sort_key(entry):
+                entry_id = str(entry.get("id") or "")
+                priority = 2
+                number = -1
+                if entry_id.startswith("td4_"):
+                    priority = 0
+                    try:
+                        number = int(entry_id.split("_")[1])
+                    except Exception:
+                        number = -1
+                elif entry_id.startswith("backfill_td4_"):
+                    priority = 1
+                    try:
+                        number = int(entry_id.split("_")[-1])
+                    except Exception:
+                        number = -1
+                return (priority, -number)
+
+            items = sorted(items, key=_sort_key)
             return {"total": total, "items": items}
         except Exception as exc:
             print(f"[VectorStore] list_all failed: {exc}")
